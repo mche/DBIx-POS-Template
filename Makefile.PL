@@ -18,9 +18,9 @@ WriteMakefile(
         'Test::More' => 0,
     },
     PREREQ_PM => {
-        'Pod::Parser' => 1.63,
+        'Pod::Parser' => 1.60,
         'Text::Template' => 1.46,
     },
     dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
-    clean => { FILES => 'DBIx-POS-Template-*' },
+    #clean => { FILES => 'DBIx-POS-Template-*' },
 );

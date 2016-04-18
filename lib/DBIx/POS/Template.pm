@@ -4,7 +4,7 @@ use warnings;
 use base qw{Pod::Parser};
 
 # Set our version
-our $VERSION = '0.00001';
+our $VERSION = '0.00002';
 
 # Hold data for our pending statement
 my $info = {};
@@ -16,7 +16,10 @@ my %sql;
 my $state;
 
 # Text::Template->new(%TT, %{$arg{tt}})
-our %TT = ( DELIMITERS => ['{%', '%}'], );
+our %TT = (
+    DELIMITERS => ['{%', '%}'],
+    #~ BROKEN => sub { die @_;},
+);
 
 # separate object
 sub new {
@@ -53,8 +56,11 @@ sub _instance {
 
 sub _process {
     my ($class, $file, %arg) = @_;
+    $file .='.pm'
+        if $file =~ s/::/\//g;
     if ( $arg{enc} ) {
-        open my $in, "<:encoding($arg{enc})", $file;#
+        open my $in, "<:encoding($arg{enc})", $file
+            or die "Cant open [$file]: $!";#
         $class->SUPER::new->parse_from_filehandle($in);
         close $in;
     } else {
@@ -218,7 +224,7 @@ sub template {
         %TT,
         %{$self->{_tt}},
     );
-    $self->{_template}->fill_in(HASH=>\%arg,);
+    $self->{_template}->fill_in(HASH=>\%arg,);#BROKEN_ARG=>\'error!', BROKEN => sub { die @_;},
 }
 
 1;
@@ -243,11 +249,11 @@ DBIx::POS::Template - is a fork of L<DBIx::POS>. Define a dictionary of SQL stat
   use DBIx::POS::Template;
 
   # separate object
-  my $sql = DBIx::POS::Template->new(__FILE__, enc=>'utf8');
+  my $pos = DBIx::POS::Template->new(__FILE__, enc=>'utf8');
   # or singleton DBIx::POS::Template->instance($file, ...);
   
-  $dbh->selectrow_hashref( $sql->{test1}->template(where => "bar = ?"), undef, ('bla') );
-  # or $sql->template('test1', where => "bar = ?")
+  my $sql = $pos->{test1}->template(where => "bar = ?");
+  # or $pos->template('test1', where => "bar = ?")
   
   =pod
 
@@ -305,7 +311,9 @@ Some options will passing to Text::Template->new() for each parsed statement. By
 
     DELIMITERS => ['{%', '%}'],
 
-=head2 instance(file, <options>)
+=back
+
+=head2 instance($file, <options>)
 
 Return singleton dictionary object, parsed $file keys will collapse/override with previous files. Same options as C<new>, I<tt> option merge with previous options of instance invokes.
 
@@ -313,9 +321,7 @@ Return singleton dictionary object, parsed $file keys will collapse/override wit
 
 Fill in dictionary sql with variables by L<Text::Template#HASH>. Other syntax:
 
-    $sql->{$key}->template(var1 => ..., var2 => ...)
-
-=back
+    $pos->{$key}->template(var1 => ..., var2 => ...)
 
 =head1 SEE ALSO
 

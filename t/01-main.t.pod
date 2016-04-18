@@ -1,0 +1,18 @@
+=pod
+
+=encoding utf8
+
+=name тест
+
+=desc test the DBIx::POS::Template module
+
+=param
+
+Some arbitrary parameter
+
+=sql
+
+  select * from bar
+
+
+=cut

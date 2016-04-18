@@ -10,11 +10,12 @@ DBIx::POS::Template - is a fork of L<DBIx::POS>. Define a dictionary of SQL stat
 
   use DBIx::POS::Template;
 
-  my $sql = DBIx::POS::Template->new(__FILE__, enc=>'utf8');
+  my $pos = DBIx::POS::Template->new(__FILE__, enc=>'utf8');
   # or singleton DBIx::POS::Template->instance($file, ...);
   
-  $dbh->selectrow_hashref( $sql->{test1}->template(where => "bar = ?"), undef, ('bla'), );
-  # or $sql->template('test1', where => "bar = ?")
+  my $sql = $pos->{test1}->template(where => "bar = ?");
+  # or
+  $sql = $pos->template('test1', where => "bar = ?");
   
   =pod
 
