@@ -1,0 +1,41 @@
+=encoding utf8
+
+Доброго всем
+
+=head1 DBIx::POS::Template
+
+¡ ¡ ¡ ALL GLORY TO GLORIA ! ! !
+
+=head1 NAME
+
+DBIx::POS::Template - is a fork of L<DBIx::POS>. Define a dictionary of SQL statements in a POD dialect (POS) plus expand template sql with embedded Perl by L<Text::Template>.
+
+=head1 SYNOPSIS
+
+  use DBIx::POS::Template;
+
+  my $sql = DBIx::POS::Template->new(__FILE__, enc=>'utf8');
+  # or singleton DBIx::POS::Template->instance($file, ...);
+  
+  $dbh->selectrow_hashref( $sql->{test1}->template( where => "bar = ?"), undef, ('bla') );
+  # or $sql->template('test1',  where => "bar = ?")
+  
+  =pod
+
+  =name test1
+
+  =desc test the DBIx::POS::Template module
+
+  =param
+
+  Some arbitrary parameter
+
+  =sql
+
+    select * from foo
+    where {% $where %}
+    ;
+
+  =cut
+
+=cut
