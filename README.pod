@@ -6,8 +6,6 @@
 
 ¡ ¡ ¡ ALL GLORY TO GLORIA ! ! !
 
-=head1 NAME
-
 DBIx::POS::Template - is a fork of L<DBIx::POS>. Define a dictionary of SQL statements in a POD dialect (POS) plus expand template sql with embedded Perl by L<Text::Template>.
 
 =head1 SYNOPSIS

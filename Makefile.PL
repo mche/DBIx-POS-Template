@@ -8,7 +8,7 @@ WriteMakefile(
     AUTHOR           => q{Михаил Че (Mikhail Che) <mche@cpan.org>},
     VERSION_FROM     => 'lib/DBIx/POS/Template.pm',
     ABSTRACT_FROM    => 'lib/DBIx/POS/Template.pm',
-    LICENSE          => 'artistic_2',
+    LICENSE          => 'perl',
     PL_FILES         => {},
     MIN_PERL_VERSION => 5.006,
     CONFIGURE_REQUIRES => {
@@ -18,8 +18,8 @@ WriteMakefile(
         'Test::More' => 0,
     },
     PREREQ_PM => {
-        #'ABC'              => 1.6,
-        #'Foo::Bar::Module' => 5.0401,
+        'Pod::Parser' => 1.63,
+        'Text::Template' => 1.46,
     },
     dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
     clean => { FILES => 'DBIx-POS-Template-*' },

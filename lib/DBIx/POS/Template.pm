@@ -1,4 +1,4 @@
-package DBIx::POS;
+package DBIx::POS::Template;
 use strict;
 use warnings;
 use base qw{Pod::Parser};
@@ -15,11 +15,16 @@ my %sql;
 # What command we're looking at
 my $state;
 
+# Text::Template->new(%TT, %{$arg{tt}})
+our %TT = ( DELIMITERS => ['{%', '%}'], );
+
 sub new {
     my ($class, $file, %arg) = @_;
-    $class->_process( $file, %arg );
-    my $new = { %sql };
+    my %back = %sql;
     %sql = ();
+    $class->_process( $file, %arg );
+    my $new = { %sql, $arg{tt} ? (_tt => $arg{tt}) : (), };
+    %sql = %back;
     bless $new, $class;
 }
 
@@ -39,9 +44,13 @@ sub instance {
 
 # Does the work of creating a new instance
 sub _new_instance {
-    my $class = shift;
-    $class->_process(@_);
+    my ($class, $file, %arg) = @_;
+    $class->_process($file, %arg);
+    # merge prev tt
+    @{$sql{_tt}}{ keys %{$arg{tt}} } = values %{$arg{tt}}
+        if $arg{tt};
     bless \%sql, $class;
+    
 }
 
 sub _process {
@@ -58,8 +67,9 @@ sub _process {
 
 sub template {
     my ($self, $key, %arg) = @_;
-    return %arg;
-    
+    die "No such item by key [$key] on this POS, check processed file(s)"
+        unless $self->{$key};
+    $self->{$key}->template(%arg);
 }
 
 ########### Parser ################
@@ -99,12 +109,10 @@ sub end_input {
         #~ if (scalar (grep {m/^(?:name|short|desc|sql)$/} keys %{$info}) == 3) {
         if (defined($info->{name}) && defined($info->{sql})) {
             # Grab the entire content for the %sql hash
-             $sql{$info->{name}} = DBIx::POS::Statement->new ($info);
+             $sql{$info->{name}} = DBIx::POS::Statement->new ($sql{_tt}, $info);
             # Start with a new empty hashref
             $info = {};
         } else {# Something's missing
-            # A nice format for dumping
-            #~ use YAML qw{Dump};
             warn "Malformed entry: ", %$info;# . Dump (\%sql, $info);
         }
     }
@@ -154,13 +162,16 @@ sub verbatim {
 1;
 
 package DBIx::POS::Statement;
+use Text::Template;
 
 use overload '""' => sub { shift->{sql} };
 
 sub new {
     my $proto = shift;
     my $class = ref $proto || $proto;
+    my $tt = shift || {};
     my $self = shift;
+    $self->{_tt} = $tt;
     bless ($self, $class);
     return $self;
 }
@@ -201,6 +212,17 @@ sub sql {
     return $self->{sql};
 }
 
+sub template {
+    my ($self, %arg) = @_;
+    $self->{_template} ||= Text::Template->new(
+        TYPE => 'STRING',
+        SOURCE => $self->sql,
+        %TT,
+        %{$self->{_tt}},
+    );
+    $self->{_template}->fill_in(HASH=>\%arg,);
+}
+
 1;
 
 
@@ -224,7 +246,7 @@ DBIx::POS::Template - is a fork of L<DBIx::POS>. Define a dictionary of SQL stat
   # or singleton DBIx::POS::Template->instance($file, ...);
   
   $dbh->selectrow_hashref( $sql->{test1}->template( where => "bar = ?"), undef, ('bla') );
-  # or $sql->template('test1',  where => "bar = ?")
+  # or $sql->template('test1', where => "bar = ?")
   
   =pod
 
@@ -248,11 +270,7 @@ DBIx::POS::Template - is a fork of L<DBIx::POS>. Define a dictionary of SQL stat
 
 =head1 DESCRIPTION
 
-DBIx::POS::Template is subclass Pod::Parser to define a POD dialect for writing a
-SQL dictionary with templating.
-
-By encouraging the centralization of SQL code, it guards against SQL
-statement duplication (and the update problems that can generate).
+DBIx::POS::Template is subclass Pod::Parser to define a POD dialect for writing a SQL dictionary(s) with templating.
 
 By separating the SQL code from its normal context of execution, it
 encourages you to do other things with it---for instance, it is easy
@@ -265,10 +283,6 @@ documentation of the intent and/or implementation of the SQL code.  It
 also provides all of that information in a format from which other
 documentation could be generated---say, a chunk of DocBook for
 incorporation into a guide to programming the application.
-
-=head2 EXPORT
-
-Nothing is exported. 
 
 =head1 SEE ALSO
 
