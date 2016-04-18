@@ -18,6 +18,7 @@ my $state;
 # Text::Template->new(%TT, %{$arg{tt}})
 our %TT = ( DELIMITERS => ['{%', '%}'], );
 
+# separate object
 sub new {
     my ($class, $file, %arg) = @_;
     my %back = %sql;
@@ -28,9 +29,7 @@ sub new {
     bless $new, $class;
 }
 
-# Taken directly from Class::Singleton---we were already overriding
-# _new_instance, and it seemed silly to have an additional dependency
-# for four statements.
+# Taken directly from Class::Singleton
 sub instance {
     my $class = shift;
     # get a reference to the _instance variable in the $class package 
@@ -39,14 +38,13 @@ sub instance {
 
     defined $$instance
         ? $$instance
-        : ($$instance = $class->_new_instance(@_));
+        : ($$instance = $class->_instance(@_));
 }
 
-# Does the work of creating a new instance
-sub _new_instance {
+sub _instance {
     my ($class, $file, %arg) = @_;
-    $class->_process($file, %arg);
-    # merge prev tt
+    $class->_process( $file, %arg );
+    # merge prev tt opts
     @{$sql{_tt}}{ keys %{$arg{tt}} } = values %{$arg{tt}}
         if $arg{tt};
     bless \%sql, $class;
@@ -67,7 +65,7 @@ sub _process {
 
 sub template {
     my ($self, $key, %arg) = @_;
-    die "No such item by key [$key] on this POS, check processed file(s)"
+    die "No such item by key [$key] on this POS, please check processed file(s)"
         unless $self->{$key};
     $self->{$key}->template(%arg);
 }
@@ -242,10 +240,11 @@ DBIx::POS::Template - is a fork of L<DBIx::POS>. Define a dictionary of SQL stat
 
   use DBIx::POS::Template;
 
+  # separate object
   my $sql = DBIx::POS::Template->new(__FILE__, enc=>'utf8');
   # or singleton DBIx::POS::Template->instance($file, ...);
   
-  $dbh->selectrow_hashref( $sql->{test1}->template( where => "bar = ?"), undef, ('bla') );
+  $dbh->selectrow_hashref( $sql->{test1}->template(where => "bar = ?"), undef, ('bla') );
   # or $sql->template('test1', where => "bar = ?")
   
   =pod
@@ -284,9 +283,39 @@ also provides all of that information in a format from which other
 documentation could be generated---say, a chunk of DocBook for
 incorporation into a guide to programming the application.
 
-=head1 SEE ALSO
+This class whould work as separate objects per pod-file or as singleton for all processed files with one dictionary of them.
 
-L<DBI>
+=head1 METHODS
+
+=head2 new($file, <options>)
+
+Create separate object and process $file POS with options:
+
+=over 4
+
+=item * B<enc> (STRING)
+
+Encoding of POD content file.
+
+=item * B<tt> (HASHREF)
+
+Some options will passing to Text::Template->new() for each parsed statement. By default only defined option 
+
+    DELIMITERS => ['{%', '%}'],
+
+=head2 instance(file, <options>)
+
+Return singleton dictionary object, parsed $file keys will collapse/override with previous files. Same options as C<new>, I<tt> option merge with previous options of instance invokes.
+
+=head2 template($key, var1 => ..., var2 => ...)
+
+Fill in dictionary sql with variables by L<Text::Template#HASH>. Other syntax:
+
+    $sql->{$key}->template(var1 => ..., var2 => ...)
+
+=back
+
+=head1 SEE ALSO
 
 L<Pod::Parser>
 
@@ -296,7 +325,7 @@ L<Text::Template>
 
 =head1 AUTHOR
 
-Михаил Че (Mikhail Che), C<< <mche [on] cpan.org> >>
+Михаил Че (Mikhail Che), C<< <mche[-at-]cpan.org> >>
 
 =head1 BUGS / CONTRIBUTING
 
@@ -306,7 +335,6 @@ Please report any bugs or feature requests at L<https://github.com/mche/DBIx-POS
 
 Copyright 2016 Mikhail Che.
 
-This module is free software; you can redistribute it and/or modify it under 
-the term of the Perl itself.
+This module is free software; you can redistribute it and/or modify it under the term of the Perl itself.
 
 =cut
