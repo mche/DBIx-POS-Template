@@ -224,6 +224,8 @@ sub template {
 1;
 
 
+=pod
+
 =encoding utf8
 
 Доброго всем
