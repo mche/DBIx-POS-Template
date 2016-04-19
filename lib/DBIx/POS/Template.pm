@@ -4,7 +4,7 @@ use warnings;
 use base qw{Pod::Parser};
 
 # Set our version
-our $VERSION = '0.00002';
+our $VERSION = '0.00003';
 
 # Hold data for our pending statement
 my $info = {};
@@ -218,6 +218,8 @@ sub sql {
 
 sub template {
     my ($self, %arg) = @_;
+    return $self->sql
+        unless scalar %arg;
     $self->{_template} ||= Text::Template->new(
         TYPE => 'STRING',
         SOURCE => $self->sql,
@@ -239,6 +241,10 @@ sub template {
 =head1 DBIx::POS::Template
 
 ¡ ¡ ¡ ALL GLORY TO GLORIA ! ! !
+
+=head1 VERSION
+
+0.00003
 
 =head1 NAME
 
