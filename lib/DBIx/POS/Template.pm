@@ -4,7 +4,7 @@ use warnings;
 use base qw{Pod::Parser};
 
 # Set our version
-our $VERSION = '0.00003';
+our $VERSION = '0.00004';
 
 # Hold data for our pending statement
 my $info = {};
@@ -54,8 +54,9 @@ sub _instance {
     
 }
 
-sub _process {
+sub _process {# pos file
     my ($class, $file, %arg) = @_;
+    return unless $file;
     $file .='.pm'
         if $file =~ s/::/\//g;
     if ( $arg{enc} ) {
@@ -244,7 +245,7 @@ sub template {
 
 =head1 VERSION
 
-0.00003
+0.00004
 
 =head1 NAME
 
