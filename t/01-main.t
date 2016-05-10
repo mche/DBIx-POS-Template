@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 18;
+use Test::More tests => 20;
  
 use_ok('DBIx::POS::Template');
 
@@ -15,7 +15,10 @@ isnt($pos->{'тест'}.'', '', 'empty key');
 isa_ok($pos->{'тест'}, 'DBIx::POS::Statement');
 ok($pos->{'тест'}->name eq 'тест', 'attribute');
 like($pos->{'тест'}, qr/foo/, 'content 1');
-ok($pos->{'тест'}->param('cached') eq 1, 'param eval');
+ok(ref($pos->{'тест'}->param()) eq 'HASH', 'param');
+ok($pos->{'тест'}->param('cached') eq 1, 'param get');
+$pos->{'тест'}->param('bla'=>1, 'blah'=>2,);
+ok($pos->{'тест'}->param('blah') eq 2, 'param set');
 like($pos->{'тест'}->template(where=>'bar = ?'), qr/bar/, 'template hashref');
 like($pos->template('тест', where=>'baz = ?'), qr/baz/, 'template object');
 

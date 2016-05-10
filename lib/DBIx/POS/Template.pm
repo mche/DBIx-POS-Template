@@ -4,7 +4,7 @@ use warnings;
 use base qw{Pod::Parser};
 
 # Set our version
-our $VERSION = '0.00005';
+our $VERSION = '0.00006';
 
 # Hold data for our pending statement
 my $info = {};
@@ -200,12 +200,14 @@ sub noreturn {
     return $self->{noreturn};
 }
 
-sub param {# ->param() |  ->param('foo') | ->param('foo'=>'bar')
+sub param {# ->param() |  ->param('foo') | ->param('foo'=>'bar', ....)
     my $self = shift;
-    return unless $self->{param};
+    return unless defined $self->{param};
     return $self->{param} unless @_;
     return $self->{param}{shift()} if @_ == 1;
-    $self->{param}{ shift() } = shift;
+    my %arg = @_;
+    my($key, $value);
+    $self->{param}{ $key } = $value while ($key, $value) = each %arg;
 }
 
 sub _eval_param {
@@ -257,7 +259,7 @@ sub template {
 
 =head1 VERSION
 
-0.00005
+0.00006
 
 =head1 NAME
 
