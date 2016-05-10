@@ -15,6 +15,8 @@ my %sql;
 # What command we're looking at
 my $cmd;
 
+my $enc; # PODs enc
+
 # Text::Template->new(%TT, %tt)
 our %TT = (
     DELIMITERS => ['{%', '%}'],
@@ -28,7 +30,7 @@ sub new {
     my ($class, $file, %arg) = @_;
     my %back = %sql;
     my %back_tt = %tt;
-    %tt = %args;
+    %tt = %arg;
     %sql = ();
     $class->_parse( $file,);
     my $new = { %sql };
@@ -52,8 +54,8 @@ sub instance {
 sub _instance {
     my ($class, $file, %arg) = @_;
     # merge prev tt opts
-    @tt{ keys %$arg } = values %$arg; 
-    $class->_parse( $file, %arg );
+    @tt{ keys %arg } = values %arg; 
+    $class->_parse( $file,);
     bless \%sql, $class;
 }
 

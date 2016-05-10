@@ -2,11 +2,11 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 20;
+use Test::More tests => 21;
  
 use_ok('DBIx::POS::Template');
 
-my $pos = DBIx::POS::Template->instance(__FILE__, enc=>'utf8');
+my $pos = DBIx::POS::Template->instance(__FILE__,);
 
 isnt($pos, undef, 'undefined');
 isa_ok($pos, 'DBIx::POS::Template');
@@ -22,7 +22,7 @@ ok($pos->{'тест'}->param('blah') eq 2, 'param set');
 like($pos->{'тест'}->template(where=>'bar = ?'), qr/bar/, 'template hashref');
 like($pos->template('тест', where=>'baz = ?'), qr/baz/, 'template object');
 
-my $pos2 = DBIx::POS::Template->new(__FILE__.'.pod', enc=>'utf8');
+my $pos2 = DBIx::POS::Template->new(__FILE__.'.pod',);
 
 isnt($pos2, undef, 'undefined 2');
 isa_ok($pos2->{'тест'}, 'DBIx::POS::Statement');
@@ -31,6 +31,7 @@ like($pos2->{'тест'}, qr/bar/, 'content 2');
 like($pos->template('тест', join => $pos2->{'тест'}->sql, where=>'bla = ?'), qr/bar/, 'template object 2');
 ok(scalar keys %$pos eq 1, 'count __FILE__');
 ok(scalar keys %$pos2 eq 1, 'count __FILE__.pod');
+ok(ref($pos2->{'тест'}->param()) eq 'HASH', 'param');
 
 
 =pod
@@ -44,9 +45,9 @@ ok(scalar keys %$pos2 eq 1, 'count __FILE__.pod');
 =param
 
 ##Some arbitrary parameters as perl code (eval)
-{ 
-  cached=>1,
-}
+  { 
+    cached=>1,
+  }
 
 =sql
 
