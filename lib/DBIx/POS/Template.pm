@@ -4,7 +4,7 @@ use warnings;
 use base qw{Pod::Parser};
 
 # Set our version
-our $VERSION = '0.00006';
+our $VERSION = '0.0001';
 
 # Hold data for our pending statement
 my $info = {};
@@ -13,22 +13,27 @@ my $info = {};
 my %sql;
 
 # What command we're looking at
-my $state;
+my $cmd;
 
-# Text::Template->new(%TT, %{$arg{tt}})
+# Text::Template->new(%TT, %tt)
 our %TT = (
     DELIMITERS => ['{%', '%}'],
     #~ BROKEN => sub { die @_;},
 );
 
+my %tt = (); # per file/instance Text::Template->new(%TT, %tt)
+
 # separate object
 sub new {
     my ($class, $file, %arg) = @_;
     my %back = %sql;
+    my %back_tt = %tt;
+    %tt = %args;
     %sql = ();
-    $class->_process( $file, %arg );
-    my $new = { %sql, $arg{tt} ? (_tt => $arg{tt}) : (), };
+    $class->_parse( $file,);
+    my $new = { %sql };
     %sql = %back;
+    %tt = %back_tt;
     bless $new, $class;
 }
 
@@ -46,28 +51,18 @@ sub instance {
 
 sub _instance {
     my ($class, $file, %arg) = @_;
-    $class->_process( $file, %arg );
     # merge prev tt opts
-    @{$sql{_tt}}{ keys %{$arg{tt}} } = values %{$arg{tt}}
-        if $arg{tt};
+    @tt{ keys %$arg } = values %$arg; 
+    $class->_parse( $file, %arg );
     bless \%sql, $class;
-    
 }
 
-sub _process {# pos file
-    my ($class, $file, %arg) = @_;
+sub _parse {# pos file
+    my ($class, $file,) = @_;
     return unless $file;
     $file .='.pm'
         if $file =~ s/::/\//g;
-    if ( $arg{enc} ) {
-        open my $in, "<:encoding($arg{enc})", $file
-            or die "Cant open [$file]: $!";#
-        $class->SUPER::new->parse_from_filehandle($in);
-        close $in;
-    } else {
-        $class->SUPER::new->parse_from_file($file);
-    }
-    
+    $class->SUPER::new->parse_from_file($file);
 }
 
 sub template {
@@ -85,6 +80,7 @@ sub command {
 
     # Get rid of all trailing whitespace
     $paragraph =~ s/\s+$//ms;
+    $enc && ($paragraph = Encode::decode($enc, $paragraph));
 
     # There may be a short description right after the command
     if ($command eq 'desc') {
@@ -101,27 +97,32 @@ sub command {
     if ($command eq 'noreturn') {
         $info->{noreturn} = 1;
     }
+    
+    if ($command eq 'enc') {
+        $enc = $paragraph;
+        require Encode;
+    }
 
     # Remember what command we're in
-    $state = $command;
+    $cmd = $command;
 }
 
 sub end_input {
     my ($self) = @_;
     # If there's stuff to try and construct from
-    if (%{$info}) {
+    #~ if (%{$info}) {
         # If we have the necessary bits
         #~ if (scalar (grep {m/^(?:name|short|desc|sql)$/} keys %{$info}) == 3) {
-        if (defined($info->{name}) && defined($info->{sql})) {
-            # Grab the entire content for the %sql hash
-            $sql{$info->{name}} = DBIx::POS::Statement->new ($sql{_tt}, $info);
-            $sql{$info->{name}}->_eval_param() if $sql{$info->{name}}->param;
-            # Start with a new empty hashref
-            $info = {};
-        } else {# Something's missing
-            warn "Malformed entry: ", %$info;# . Dump (\%sql, $info);
-        }
+    if (%{$info} && defined($info->{name}) && defined($info->{sql})) {
+        # Grab the entire content for the %sql hash
+        $sql{$info->{name}} = DBIx::POS::Statement->new ($info, %TT, %tt);
+        $sql{$info->{name}}->_eval_param() if $sql{$info->{name}}->param;
+        # Start with a new empty hashref
+        $info = {};
+    } else {# Something's missing
+        warn "Malformed entry: ", %$info;# . Dump (\%sql, $info);
     }
+    #~ }
 }
 
 
@@ -131,16 +132,17 @@ sub textblock {
 
     # Collapse trailing whitespace to a \n
     $paragraph =~ s/\s+$/\n/ms;
+    $enc && ($paragraph = Encode::decode($enc, $paragraph));
 
-    if ($state eq 'desc') {
+    if ($cmd eq 'desc') {
         $info->{desc} .= $paragraph;
     }
 
-    elsif ($state eq 'param') {
+    elsif ($cmd eq 'param') {
         $info->{param} .= $paragraph;
     }
 
-    elsif ($state eq 'sql') {
+    elsif ($cmd eq 'sql') {
         $info->{sql} .= $paragraph;
     }
 }
@@ -152,15 +154,15 @@ sub verbatim {
     # Collapse trailing whitespace to a \n
     $paragraph =~ s/\s+$/\n/ms;
 
-    if ($state eq 'desc') {
+    if ($cmd eq 'desc') {
         $info->{desc} .= $paragraph;
     }
 
-    elsif ($state eq 'param') {
+    elsif ($cmd eq 'param') {
         $info->{param} .= $paragraph;
     }
 
-    elsif ($state eq 'sql') {
+    elsif ($cmd eq 'sql') {
         $info->{sql} .= $paragraph;
     }
 }
@@ -175,9 +177,8 @@ use overload '""' => sub { shift->{sql} };
 sub new {
     my $proto = shift;
     my $class = ref $proto || $proto;
-    my $tt = shift || {};
     my $self = shift;
-    $self->{_tt} = $tt;
+    $self->{_TT} = { @_ };
     bless ($self, $class);
     return $self;
 }
@@ -238,8 +239,7 @@ sub template {
     $self->{_template} ||= Text::Template->new(
         TYPE => 'STRING',
         SOURCE => $self->sql,
-        %TT,
-        %{$self->{_tt}},
+        %{$self->{_TT}},
     );
     $self->{_template}->fill_in(HASH=>\%arg,);#BROKEN_ARG=>\'error!', BROKEN => sub { die @_;},
 }
@@ -259,7 +259,7 @@ sub template {
 
 =head1 VERSION
 
-0.00006
+0.0001
 
 =head1 NAME
 
@@ -270,7 +270,7 @@ DBIx::POS::Template - is a fork of L<DBIx::POS>. Define a dictionary of SQL stat
   use DBIx::POS::Template;
 
   # separate object
-  my $pos = DBIx::POS::Template->new(__FILE__, enc=>'utf8');
+  my $pos = DBIx::POS::Template->new(__FILE__, ...);
   # or singleton DBIx::POS::Template->instance($file, ...);
   
   my $sql = $pos->{test1}->template(where => "bar = ?");
@@ -284,10 +284,10 @@ DBIx::POS::Template - is a fork of L<DBIx::POS>. Define a dictionary of SQL stat
 
   =param
   
-  # Some arbitrary parameters as perl code (eval)
-  {
-    cache=>1,
-  }
+    # Some arbitrary parameters as perl code (eval)
+    {
+        cache=>1,
+    }
 
   =sql
 
@@ -321,21 +321,10 @@ This class whould work as separate objects per pod-file or as singleton for all 
 
 =head2 new($file, <options>)
 
-Create separate object and process $file POS with options:
-
-=over 4
-
-=item * B<enc> (STRING)
-
-Encoding of POD content file. ()
-
-=item * B<tt> (HASHREF)
-
-Some options will passing to Text::Template->new() for each parsed statement. By default only defined option 
+Create separate object and process $file POS with options, will passing to Text::Template->new() for each parsed statement. By default only defined option 
 
     DELIMITERS => ['{%', '%}'],
 
-=back
 
 =head2 instance($file, <options>)
 
