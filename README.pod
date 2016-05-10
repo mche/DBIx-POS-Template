@@ -1,8 +1,12 @@
 =encoding utf8
 
-Доброго всем    ¡ ¡ ¡ ALL GLORY TO GLORIA ! ! !
+Доброго всем
 
 =head1 DBIx::POS::Template
+
+¡ ¡ ¡ ALL GLORY TO GLORIA ! ! !
+
+=head1 NAME
 
 DBIx::POS::Template - is a fork of L<DBIx::POS>. Define a dictionary of SQL statements in a POD dialect (POS) plus expand template sql with embedded Perl by L<Text::Template>.
 
@@ -10,7 +14,7 @@ DBIx::POS::Template - is a fork of L<DBIx::POS>. Define a dictionary of SQL stat
 
   use DBIx::POS::Template;
 
-  my $pos = DBIx::POS::Template->new(__FILE__, enc=>'utf8');
+  my $pos = DBIx::POS::Template->new(__FILE__,);
   # or singleton DBIx::POS::Template->instance($file, ...);
   
   my $sql = $pos->{test1}->template(where => "bar = ?");
@@ -25,7 +29,10 @@ DBIx::POS::Template - is a fork of L<DBIx::POS>. Define a dictionary of SQL stat
 
   =param
 
-  Some arbitrary parameter
+    # Some arbitrary parameters as perl code (eval)
+    {
+        cache=>1,
+    }
 
   =sql
 
