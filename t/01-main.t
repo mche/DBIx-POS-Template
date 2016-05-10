@@ -6,7 +6,7 @@ use Test::More tests => 21;
  
 use_ok('DBIx::POS::Template');
 
-my $pos = DBIx::POS::Template->instance(__FILE__,);
+my $pos = DBIx::POS::Template->instance(__FILE__);
 
 isnt($pos, undef, 'undefined');
 isa_ok($pos, 'DBIx::POS::Template');
@@ -22,7 +22,7 @@ ok($pos->{'тест'}->param('blah') eq 2, 'param set');
 like($pos->{'тест'}->template(where=>'bar = ?'), qr/bar/, 'template hashref');
 like($pos->template('тест', where=>'baz = ?'), qr/baz/, 'template object');
 
-my $pos2 = DBIx::POS::Template->new(__FILE__.'.pod',);
+my $pos2 = DBIx::POS::Template->new(__FILE__.'.pod');
 
 isnt($pos2, undef, 'undefined 2');
 isa_ok($pos2->{'тест'}, 'DBIx::POS::Statement');
