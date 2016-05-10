@@ -4,7 +4,7 @@ use warnings;
 use base qw{Pod::Parser};
 
 # Set our version
-our $VERSION = '0.00004';
+our $VERSION = '0.00005';
 
 # Hold data for our pending statement
 my $info = {};
@@ -114,7 +114,8 @@ sub end_input {
         #~ if (scalar (grep {m/^(?:name|short|desc|sql)$/} keys %{$info}) == 3) {
         if (defined($info->{name}) && defined($info->{sql})) {
             # Grab the entire content for the %sql hash
-             $sql{$info->{name}} = DBIx::POS::Statement->new ($sql{_tt}, $info);
+            $sql{$info->{name}} = DBIx::POS::Statement->new ($sql{_tt}, $info);
+            $sql{$info->{name}}->_eval_param() if $sql{$info->{name}}->param;
             # Start with a new empty hashref
             $info = {};
         } else {# Something's missing
@@ -199,11 +200,22 @@ sub noreturn {
     return $self->{noreturn};
 }
 
-sub param {
+sub param {# ->param() |  ->param('foo') | ->param('foo'=>'bar')
     my $self = shift;
-    $self->{param} = shift if (@_);
-    return $self->{param};
+    return unless $self->{param};
+    return $self->{param} unless @_;
+    return $self->{param}{shift()} if @_ == 1;
+    $self->{param}{ shift() } = shift;
 }
+
+sub _eval_param {
+    my $self = shift;
+    #~ warn "\n---------------\n$self->{param}\n===========\n";
+    my $param = eval $self->{param};
+    die "Malformed perl code param [$self->{param}]: $@" if $@;
+    $self->{param} = $param;
+}
+
 
 sub short {
     my $self = shift;
@@ -245,11 +257,11 @@ sub template {
 
 =head1 VERSION
 
-0.00004
+0.00005
 
 =head1 NAME
 
-DBIx::POS::Template - is a fork of L<DBIx::POS>. Define a dictionary of SQL statements in a POD dialect (POS) plus expand template sql with embedded Perl by L<Text::Template>.
+DBIx::POS::Template - is a fork of L<DBIx::POS>. Define a dictionary of SQL statements in a POD dialect (POS) plus expand template sql with embedded Perl using L<Text::Template>.
 
 =head1 SYNOPSIS
 
@@ -269,13 +281,16 @@ DBIx::POS::Template - is a fork of L<DBIx::POS>. Define a dictionary of SQL stat
   =desc test the DBIx::POS::Template module
 
   =param
-
-  Some arbitrary parameter
+  
+  # Some arbitrary parameters as perl code (eval)
+  {
+    cache=>1,
+  }
 
   =sql
 
     select * from foo
-    where {% $where %}
+    {% $where %}
     ;
 
   =cut
@@ -310,7 +325,7 @@ Create separate object and process $file POS with options:
 
 =item * B<enc> (STRING)
 
-Encoding of POD content file.
+Encoding of POD content file. ()
 
 =item * B<tt> (HASHREF)
 

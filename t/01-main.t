@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 17;
+use Test::More tests => 18;
  
 use_ok('DBIx::POS::Template');
 
@@ -15,6 +15,7 @@ isnt($pos->{'тест'}.'', '', 'empty key');
 isa_ok($pos->{'тест'}, 'DBIx::POS::Statement');
 ok($pos->{'тест'}->name eq 'тест', 'attribute');
 like($pos->{'тест'}, qr/foo/, 'content 1');
+ok($pos->{'тест'}->param('cached') eq 1, 'param eval');
 like($pos->{'тест'}->template(where=>'bar = ?'), qr/bar/, 'template hashref');
 like($pos->template('тест', where=>'baz = ?'), qr/baz/, 'template object');
 
@@ -39,7 +40,10 @@ ok(scalar keys %$pos2 eq 1, 'count __FILE__.pod');
 
 =param
 
-Some arbitrary parameter
+##Some arbitrary parameters as perl code (eval)
+{ 
+  cached=>1,
+}
 
 =sql
 

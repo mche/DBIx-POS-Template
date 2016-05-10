@@ -8,7 +8,7 @@
 
 =param
 
-Some arbitrary parameter
+# Some arbitrary parameter as perl code (eval)
 
 =sql
 
