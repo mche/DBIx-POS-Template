@@ -23,19 +23,25 @@ our %TT = (
     #~ BROKEN => sub { die @_;},
 );
 
-my %tt = (); # per file/instance Text::Template->new(%TT, %tt)
+my %tt = (); # for Text::Template->new(..., tt=>{%TT, %tt}, )
+my %template = (); # for Text::Template->new(..., template=>{%template}, )
 
 # separate object
 sub new {
     my ($class, $file, %arg) = @_;
     my %back = %sql;
     my %back_tt = %tt;
-    %tt = %arg;
+    my %back_template = %template;
+    
+    %tt = $arg{TT} || $arg{tt};
+    %template = $arg{template};
+    
     %sql = ();
     $class->_process( $file,);
     my $new = { %sql };
     %sql = %back;
     %tt = %back_tt;
+    %template = %back_template;
     bless $new, $class;
 }
 
@@ -54,7 +60,11 @@ sub instance {
 sub _instance {
     my ($class, $file, %arg) = @_;
     # merge prev tt opts
-    @tt{ keys %arg } = values %arg; 
+    my $tt = $arg{TT} || $arg{tt};
+    @tt{ keys %$tt } = values %$tt
+        if $tt;
+    @template{ keys %{$arg{template}} } = values %{$arg{template}}
+        if $arg{template};
     $class->_process( $file,);
     bless \%sql, $class;
 }
@@ -117,7 +127,7 @@ sub end_input {
         #~ if (scalar (grep {m/^(?:name|short|desc|sql)$/} keys %{$info}) == 3) {
         if (defined($info->{name}) && defined($info->{sql})) {
             # Grab the entire content for the %sql hash
-            $sql{$info->{name}} = DBIx::POS::Statement->new ($info, %TT, %tt);
+            $sql{$info->{name}} = DBIx::POS::Statement->new ($info, tt => {%TT, %tt}, template => {%template},);
             $sql{$info->{name}}->_eval_param() if $sql{$info->{name}}->param;
             # Start with a new empty hashref
             $info = {};
@@ -262,7 +272,7 @@ sub template {
 
 =head1 VERSION
 
-0.0001
+0.0002
 
 =head1 NAME
 
@@ -324,10 +334,21 @@ This class whould work as separate objects per pod-file or as singleton for all 
 
 =head2 new($file, <options>)
 
-Create separate object and process $file POS with options, will passing to Text::Template->new() for each parsed statement. By default only defined option 
+Create separate object and process $file POS with options:
+
+=over 4
+
+=item * TT | tt
+
+Optional hashref will passing to L<Text::Template>->new() for each parsed statement. By default only defined the key:
 
     DELIMITERS => ['{%', '%}'],
 
+=item * template
+
+Optional hashref of default values for each statement template.
+
+=back
 
 =head2 instance($file, <options>)
 
