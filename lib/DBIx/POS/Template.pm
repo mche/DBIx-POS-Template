@@ -23,25 +23,28 @@ our %TT = (
     #~ BROKEN => sub { die @_;},
 );
 
-my %tt = (); # for Text::Template->new(..., tt=>{%TT, %tt}, )
-my %template = (); # for Text::Template->new(..., template=>{%template}, )
+my %tt = (); # instance scope: Text::Template->new(..., tt=>{%TT, %tt}, )
+my $tt = {}; # new scope: Text::Template->new(..., tt=>{%TT, %$tt}, )
+my %template = (); # instance scope: Text::Template->new(..., template=>\%template, )
+my $template = {}; # new scope: Text::Template->new(..., template=>$template, )
+my $scope; # 'new' | 'instance'
 
 # separate object
 sub new {
     my ($class, $file, %arg) = @_;
+    $scope = 'new';
     my %back = %sql;
-    my %back_tt = %tt;
-    my %back_template = %template;
+    #~ my %back_tt = %tt;
     
-    %tt = $arg{TT} || $arg{tt};
-    %template = $arg{template};
-    
+    $tt = $arg{TT} || $arg{tt} || {};
+    $template = $arg{template} || {};
     %sql = ();
+    
     $class->_process( $file,);
     my $new = { %sql };
+    
     %sql = %back;
-    %tt = %back_tt;
-    %template = %back_template;
+    #~ %tt = %back_tt;
     bless $new, $class;
 }
 
@@ -59,6 +62,7 @@ sub instance {
 
 sub _instance {
     my ($class, $file, %arg) = @_;
+    $scope = 'instance';
     # merge prev tt opts
     my $tt = $arg{TT} || $arg{tt};
     @tt{ keys %$tt } = values %$tt
@@ -127,7 +131,7 @@ sub end_input {
         #~ if (scalar (grep {m/^(?:name|short|desc|sql)$/} keys %{$info}) == 3) {
         if (defined($info->{name}) && defined($info->{sql})) {
             # Grab the entire content for the %sql hash
-            $sql{$info->{name}} = DBIx::POS::Statement->new ($info, tt => {%TT, %tt}, template => {%template},);
+            $sql{$info->{name}} = DBIx::POS::Statement->new ($info, tt => {%TT, $scope eq 'new' ? %$tt : %tt}, template => $scope eq 'new' ? $template : \%template,);
             $sql{$info->{name}}->_eval_param() if $sql{$info->{name}}->param;
             # Start with a new empty hashref
             $info = {};
