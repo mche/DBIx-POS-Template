@@ -38,7 +38,11 @@ ok(scalar keys %$pos eq 1, 'count __FILE__');
 ok(scalar keys %$pos2 eq 1, 'count __FILE__.pod');
 ok(ref($pos2->{'тест'}->param()) eq undef, 'undef param');
 
-my $pos3 = POS->new();
+my $pos3 = POS->new(template=>{tables=>{foo=>'таблица'}});
+
+like($pos3->{'тест'}.'', qr/таблица/, 'stringify 3');
+ok(scalar keys %$pos3 eq 1, 'count POS.pm');
+like($pos3->{'тест2'}.'', qr/from ;/, 'no var 3');
 
 done_testing;
 

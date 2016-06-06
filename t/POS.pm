@@ -10,12 +10,15 @@ sub new {DBIx::POS::Template->new(__FILE__, @_);}
 
 =name тест
 
-=desc test the DBIx::POS::Template module
-
 =sql
 
   select * from {% $tables{foo} %};
 
+=name тест2
+
+=sql
+
+  select * from {% $tables{foo2} %};
 
 =cut
 
