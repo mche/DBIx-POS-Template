@@ -192,6 +192,7 @@ sub verbatim {
 package DBIx::POS::Statement;
 #=============================================
 use Text::Template;
+use Hash::Merge qw(merge);
 
 use overload '""' => sub { shift->template };
 
@@ -200,7 +201,7 @@ sub new {
     my $class = ref $proto || $proto;
     my $self = shift;
     my %arg = @_;
-    $self->{_TT} = $arg{TT} ||$arg{tt} ;
+    $self->{_TT} = $arg{TT} || $arg{tt} ;
     $self->{_template_default} = $arg{template};
     bless ($self, $class);
     return $self;
@@ -237,7 +238,6 @@ sub param {# ->param() |  ->param('foo') | ->param('foo'=>'bar', ....)
 
 sub _eval_param {
     my $self = shift;
-    #~ warn "\n---------------\n$self->{param}\n===========\n";
     my $param = eval $self->{param};
     die "Malformed perl code param [$self->{param}]: $@" if $@;
     $self->{param} = $param;
@@ -265,7 +265,12 @@ sub template {
         SOURCE => $self->{sql},
         %{$self->{_TT}},
     );
-    $self->{_template}->fill_in(HASH=>{%{$self->{_template_default}}, %arg},);#BROKEN_ARG=>\'error!', BROKEN => sub { die @_;},
+    #~ $self->{_template}->fill_in(HASH=>{%{$self->{_template_default}}, %arg},);#BROKEN_ARG=>\'error!', BROKEN => sub { die @_;},
+    return $self->{_template}->fill_in(HASH=>$self->{_template_default})
+        unless %arg;
+    return $self->{_template}->fill_in(HASH=>\%arg)
+        unless %{$self->{_template_default}};
+    $self->{_template}->fill_in(HASH=>merge(\%arg, $self->{_template_default}));
 }
 
 1;

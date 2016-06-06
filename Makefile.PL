@@ -20,6 +20,7 @@ WriteMakefile(
     PREREQ_PM => {
         'Pod::Parser' => 1.60,
         'Text::Template' => 1.46,
+        'Hash::Merge'=>0.200,
     },
     dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
     #clean => { FILES => 'DBIx-POS-Template-*' },
