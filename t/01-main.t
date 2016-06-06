@@ -11,10 +11,11 @@ my $pos = DBIx::POS::Template->instance(__FILE__, template=>{tables=>{foo=>'"Bar
 isnt($pos, undef, 'undefined');
 isa_ok($pos, 'DBIx::POS::Template');
 can_ok($pos, qw(new instance template));
-isnt($pos->{'тест'}.'', '', 'empty key');
+isnt($pos->{'тест'}.'', '', 'empty');
 isa_ok($pos->{'тест'}, 'DBIx::POS::Statement');
 ok($pos->{'тест'}->name eq 'тест', 'attribute');
 like($pos->{'тест'}->template(tables=>{foo=>'"Bar2"'}), qr/Bar2/, 'over default 1');
+like($pos->{'тест'}.'', qr/Bar1/, 'stringify 1');
 like($pos->{'тест'}->template, qr/Bar1/, 'default 1');
 ok(ref($pos->{'тест'}->param()) eq 'HASH', 'param');
 ok($pos->{'тест'}->param('cached') eq 1, 'param get');
@@ -28,6 +29,7 @@ my $pos2 = DBIx::POS::Template->new(__FILE__.'.pod', template=>{tables=>{foo=>'"
 isnt($pos2, undef, 'undefined 2');
 isa_ok($pos2->{'тест'}, 'DBIx::POS::Statement');
 can_ok($pos2->{'тест'}, qw(new template name desc sql));
+like($pos2->{'тест'}.'', qr/Foo1/, 'stringify 2');
 like($pos2->{'тест'}->template(tables=>{foo=>'"Foo2"'}), qr/Foo2/, 'over default 2');
 my $st = $pos->template('тест', join => $pos2->{'тест'}->template, );
 like($st, qr/Foo1/, 'template 1 on template 2 defaults');
