@@ -6,11 +6,6 @@
 
 =desc test the DBIx::POS::Template module
 
-=param
-
-# Some arbitrary parameter as perl code (eval)
- {}
-
 =sql
 
   select * from {% $tables{foo} %};
