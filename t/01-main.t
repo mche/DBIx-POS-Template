@@ -34,15 +34,18 @@ like($pos2->{'тест'}->template(tables=>{foo=>'"Foo2"'}), qr/Foo2/, 'over def
 my $st = $pos->template('тест', join => $pos2->{'тест'}->template, );
 like($st, qr/Foo1/, 'template 1 on template 2 defaults');
 like($st, qr/Bar1/, 'template 1 on template 2 defaults');
-ok(scalar keys %$pos eq 1, 'count __FILE__');
-ok(scalar keys %$pos2 eq 1, 'count __FILE__.pod');
 ok(ref($pos2->{'тест'}->param()) eq undef, 'undef param');
 
+use lib 't';
+use POS;
 my $pos3 = POS->new(template=>{tables=>{foo=>'таблица'}});
 
 like($pos3->{'тест'}.'', qr/таблица/, 'stringify 3');
-ok(scalar keys %$pos3 eq 1, 'count POS.pm');
 like($pos3->{'тест2'}.'', qr/from ;/, 'no var 3');
+
+ok(scalar keys %$pos eq 1, 'count __FILE__');
+ok(scalar keys %$pos2 eq 1, 'count __FILE__.pod');
+ok(scalar keys %$pos3 eq 2, 'count POS.pm');
 
 done_testing;
 

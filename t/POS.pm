@@ -1,8 +1,8 @@
 package POS;
-use lib 'lib';
+#~ use lib 'lib';
 use DBIx::POS::Template;
 
-sub new {DBIx::POS::Template->new(__FILE__, @_);}
+sub new {shift; DBIx::POS::Template->new(__FILE__, @_);}
 
 =pod
 
