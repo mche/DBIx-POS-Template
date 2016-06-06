@@ -38,6 +38,8 @@ ok(scalar keys %$pos eq 1, 'count __FILE__');
 ok(scalar keys %$pos2 eq 1, 'count __FILE__.pod');
 ok(ref($pos2->{'тест'}->param()) eq undef, 'undef param');
 
+my $pos3 = POS->new();
+
 done_testing;
 
 =pod
@@ -66,3 +68,4 @@ done_testing;
 
 
 =cut
+
