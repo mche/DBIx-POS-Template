@@ -13,7 +13,7 @@
 
 =sql
 
-  select * from bar
+  select * from {% $tables{foo} %};
 
 
 =cut
