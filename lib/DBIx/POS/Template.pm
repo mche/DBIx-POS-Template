@@ -4,7 +4,7 @@ use warnings;
 use base qw{Pod::Parser};
 
 # Set our version
-our $VERSION = '0.0001';
+our $VERSION = '0.001';
 
 # Hold data for our pending statement
 my $info = {};
@@ -131,7 +131,11 @@ sub end_input {
         #~ if (scalar (grep {m/^(?:name|short|desc|sql)$/} keys %{$info}) == 3) {
         if (defined($info->{name}) && defined($info->{sql})) {
             # Grab the entire content for the %sql hash
-            $sql{$info->{name}} = DBIx::POS::Statement->new ($info, tt => {%TT, $scope eq 'new' ? %$tt : %tt}, template => $scope eq 'new' ? $template : \%template,);
+            $sql{$info->{name}} = DBIx::POS::Statement->new (
+                $info,
+                tt => {%TT, $scope eq 'new' ? %$tt : %tt},
+                template => $scope eq 'new' ? $template : \%template,
+            );
             $sql{$info->{name}}->_eval_param() if $sql{$info->{name}}->param;
             # Start with a new empty hashref
             $info = {};
@@ -195,7 +199,9 @@ sub new {
     my $proto = shift;
     my $class = ref $proto || $proto;
     my $self = shift;
-    $self->{_TT} = { @_ };
+    my %arg = @_;
+    $self->{_TT} = $arg{TT} ||$arg{tt} ;
+    $self->{_template_default} = $arg{template};
     bless ($self, $class);
     return $self;
 }
@@ -224,8 +230,7 @@ sub param {# ->param() |  ->param('foo') | ->param('foo'=>'bar', ....)
     return $self->{param} unless @_;
     return $self->{param}{shift()} if @_ == 1;
     my %arg = @_;
-    my($key, $value);
-    $self->{param}{ $key } = $value while ($key, $value) = each %arg;
+    @$self{param}{ keys %arg } = values %arg;
 }
 
 sub _eval_param {
@@ -252,13 +257,13 @@ sub sql {
 sub template {
     my ($self, %arg) = @_;
     return $self->sql
-        unless scalar %arg;
+        unless scalar(%arg) || scalar(%{$self->{_template_default}});
     $self->{_template} ||= Text::Template->new(
         TYPE => 'STRING',
         SOURCE => $self->sql,
         %{$self->{_TT}},
     );
-    $self->{_template}->fill_in(HASH=>\%arg,);#BROKEN_ARG=>\'error!', BROKEN => sub { die @_;},
+    $self->{_template}->fill_in(HASH=>{%{$self->{_template_default}}, %arg},);#BROKEN_ARG=>\'error!', BROKEN => sub { die @_;},
 }
 
 1;
@@ -276,7 +281,7 @@ sub template {
 
 =head1 VERSION
 
-0.0002
+0.001
 
 =head1 NAME
 
@@ -338,7 +343,7 @@ This class whould work as separate objects per pod-file or as singleton for all 
 
 =head2 new($file, <options>)
 
-Create separate object and process $file POS with options:
+Create separate object and process $file POS with options names:
 
 =over 4
 
@@ -346,11 +351,15 @@ Create separate object and process $file POS with options:
 
 Optional hashref will passing to L<Text::Template>->new() for each parsed statement. By default only defined the key:
 
-    DELIMITERS => ['{%', '%}'],
+  ..., TT => {DELIMITERS => ['{%', '%}'],},
+
+For B<instance> this hashref will be merged with previous instance invokes.
 
 =item * template
 
-Optional hashref of default values for each statement template.
+  ..., template => {foo=>1,},
+
+Optional hashref of default values for each statement template. For B<instance> this hashref will be merged with previous instance invokes.
 
 =back
 
