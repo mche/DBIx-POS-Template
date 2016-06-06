@@ -193,7 +193,7 @@ package DBIx::POS::Statement;
 #=============================================
 use Text::Template;
 
-use overload '""' => sub { shift->{sql} };
+use overload '""' => sub { shift->template };
 
 sub new {
     my $proto = shift;
@@ -258,11 +258,11 @@ sub sql {
 
 sub template {
     my ($self, %arg) = @_;
-    return $self->sql
+    return $self->{sql}
         unless scalar(%arg) || scalar(%{$self->{_template_default}});
     $self->{_template} ||= Text::Template->new(
         TYPE => 'STRING',
-        SOURCE => $self->sql,
+        SOURCE => $self->{sql},
         %{$self->{_TT}},
     );
     $self->{_template}->fill_in(HASH=>{%{$self->{_template_default}}, %arg},);#BROKEN_ARG=>\'error!', BROKEN => sub { die @_;},
