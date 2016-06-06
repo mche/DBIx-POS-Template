@@ -227,10 +227,12 @@ sub noreturn {
 sub param {# ->param() |  ->param('foo') | ->param('foo'=>'bar', ....)
     my $self = shift;
     return unless defined $self->{param};
+    #~ $self->{param} ||= {};
+    return $self->{param} unless ref $self->{param} eq 'HASH';
     return $self->{param} unless @_;
     return $self->{param}{shift()} if @_ == 1;
     my %arg = @_;
-    @$self{param}{ keys %arg } = values %arg;
+    @{$self->{param} ||= {}}{ keys %arg } = values %arg;
 }
 
 sub _eval_param {
