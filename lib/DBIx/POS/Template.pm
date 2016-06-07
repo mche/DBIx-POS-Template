@@ -5,7 +5,7 @@ use base qw{Pod::Parser};
 use Hash::Merge qw(merge);
 
 # Set our version
-our $VERSION = '0.001';
+our $VERSION = '0.002';
 
 # Hold data for our pending statement
 my $info = {};
@@ -291,7 +291,7 @@ sub template {
 
 =head1 VERSION
 
-0.001
+0.002
 
 =head1 NAME
 
@@ -375,7 +375,7 @@ Optional hashref of default values for each statement template. For B<instance> 
 
 =head2 instance($file, <options>)
 
-Return singleton dictionary object, parsed $file keys will collapse/override with previous files. Same options as C<new>, I<tt> option merge with previous options of instance invokes.
+Return singleton dictionary object, parsed $file keys will collapse/override with previous instances files. Same options as C<new>. B<tt> and B<template> options merge with previous options of instance invokes.
 
 =head2 template($key, var1 => ..., var2 => ...)
 
