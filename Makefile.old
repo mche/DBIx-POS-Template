@@ -19,7 +19,7 @@
 #     MIN_PERL_VERSION => q[5.006]
 #     NAME => q[DBIx::POS::Template]
 #     PL_FILES => {  }
-#     PREREQ_PM => { Pod::Parser=>q[1.6], Test::More=>q[0], Text::Template=>q[1.46] }
+#     PREREQ_PM => { Hash::Merge=>q[0.2], Pod::Parser=>q[1.6], Test::More=>q[0], Text::Template=>q[1.46] }
 #     TEST_REQUIRES => {  }
 #     VERSION_FROM => q[lib/DBIx/POS/Template.pm]
 #     dist => { COMPRESS=>q[gzip -9f], SUFFIX=>q[gz] }
@@ -487,7 +487,7 @@ realclean_subdirs :
 # Delete temporary files (via clean) and also delete dist files
 realclean purge ::  clean realclean_subdirs
 	- $(RM_F) \
-	  $(FIRST_MAKEFILE) $(MAKEFILE_OLD) 
+	  $(MAKEFILE_OLD) $(FIRST_MAKEFILE) 
 	- $(RM_RF) \
 	  $(DISTVNAME) 
 
@@ -515,6 +515,7 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '    - t' >> META_new.yml
 	$(NOECHO) $(ECHO) '    - inc' >> META_new.yml
 	$(NOECHO) $(ECHO) 'requires:' >> META_new.yml
+	$(NOECHO) $(ECHO) '  Hash::Merge: '\''0.2'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  Pod::Parser: '\''1.6'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  Text::Template: '\''1.46'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) '  perl: '\''5.006'\''' >> META_new.yml
@@ -556,6 +557,7 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '      },' >> META_new.json
 	$(NOECHO) $(ECHO) '      "runtime" : {' >> META_new.json
 	$(NOECHO) $(ECHO) '         "requires" : {' >> META_new.json
+	$(NOECHO) $(ECHO) '            "Hash::Merge" : "0.2",' >> META_new.json
 	$(NOECHO) $(ECHO) '            "Pod::Parser" : "1.6",' >> META_new.json
 	$(NOECHO) $(ECHO) '            "Text::Template" : "1.46",' >> META_new.json
 	$(NOECHO) $(ECHO) '            "perl" : "5.006"' >> META_new.json
@@ -870,6 +872,7 @@ ppd :
 	$(NOECHO) $(ECHO) '    <AUTHOR>ÐÐ¸ÑÐ°Ð¸Ð» Ð§Ðµ (Mikhail Che) &lt;mche@cpan.org&gt;</AUTHOR>' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '    <IMPLEMENTATION>' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <PERLCORE VERSION="5,006,0,0" />' >> $(DISTNAME).ppd
+	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Hash::Merge" VERSION="0.2" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Pod::Parser" VERSION="1.6" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Text::Template" VERSION="1.46" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <ARCHITECTURE NAME="x86_64-linux-5.18" />' >> $(DISTNAME).ppd

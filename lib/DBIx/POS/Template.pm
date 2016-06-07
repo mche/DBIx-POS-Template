@@ -2,6 +2,7 @@ package DBIx::POS::Template;
 use strict;
 use warnings;
 use base qw{Pod::Parser};
+use Hash::Merge qw(merge);
 
 # Set our version
 our $VERSION = '0.001';
@@ -67,8 +68,10 @@ sub _instance {
     my $tt = $arg{TT} || $arg{tt};
     @tt{ keys %$tt } = values %$tt
         if $tt;
-    @template{ keys %{$arg{template}} } = values %{$arg{template}}
-        if $arg{template};
+    #~ @template{ keys %{$arg{template}} } = values %{$arg{template}}
+    %template = %{merge \%template, $arg{template}}
+        if $arg{template} && %{$arg{template}};
+    
     $class->_process( $file,);
     bless \%sql, $class;
 }
