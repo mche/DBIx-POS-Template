@@ -5,7 +5,7 @@ use base qw{Pod::Parser};
 use Hash::Merge qw(merge);
 
 # Set our version
-our $VERSION = '0.002';
+our $VERSION = '0.003';
 
 # Hold data for our pending statement
 my $info = {};
@@ -52,6 +52,7 @@ sub new {
 # Taken directly from Class::Singleton
 sub instance {
     my $class = shift;
+    $scope = 'instance';
     # get a reference to the _instance variable in the $class package 
     no strict 'refs';
     my $instance = \${ "$class\::_instance" };
@@ -63,7 +64,6 @@ sub instance {
 
 sub _instance {
     my ($class, $file, %arg) = @_;
-    $scope = 'instance';
     # merge prev tt opts
     my $tt = $arg{TT} || $arg{tt};
     @tt{ keys %$tt } = values %$tt
@@ -291,7 +291,7 @@ sub template {
 
 =head1 VERSION
 
-0.002
+0.003
 
 =head1 NAME
 
