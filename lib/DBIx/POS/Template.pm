@@ -336,7 +336,19 @@ DBIx::POS::Template - is a fork of L<DBIx::POS>. Define a dictionary of SQL stat
 
   =cut
 
+Or:
 
+  package POS::Foo;
+  use DBIx::POS::Template;
+  use Hash::Merge qw(merge);
+  
+  my $default = {foo=>'bar',};
+  
+  sub new {
+    my $proto = shift;
+    DBIx::POS::Template->new(__FILE__, template => merge({@_}, $default));
+    # or DBIx::POS::Template->instance(...
+  }
 
 =head1 DESCRIPTION
 
