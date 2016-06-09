@@ -5,13 +5,13 @@ use base qw{Pod::Parser};
 use Hash::Merge qw(merge);
 
 # Set our version
-our $VERSION = '0.004';
+our $VERSION = '0.005';
 
 =pod
 
 =head1 VERSION
 
-0.004
+0.005
 
 =cut
 
@@ -91,7 +91,7 @@ sub _process {# pos file
     return unless $file;
     $file .='.pm'
         if $file =~ s/::/\//g;
-    warn "Processing file [$file]";
+    #~ warn "Processing file [$file]";
     $class->SUPER::new->parse_from_file($file);
 }
 
