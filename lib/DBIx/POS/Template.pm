@@ -5,7 +5,15 @@ use base qw{Pod::Parser};
 use Hash::Merge qw(merge);
 
 # Set our version
-our $VERSION = '0.003';
+our $VERSION = '0.004';
+
+=pod
+
+=head1 VERSION
+
+0.004
+
+=cut
 
 # Hold data for our pending statement
 my $info = {};
@@ -50,7 +58,7 @@ sub new {
 }
 
 # Taken directly from Class::Singleton
-sub instance {
+sub instance000 {
     my $class = shift;
     $scope = 'instance';
     # get a reference to the _instance variable in the $class package 
@@ -62,14 +70,16 @@ sub instance {
         : ($$instance = $class->_instance(@_));
 }
 
-sub _instance {
+sub instance {
     my ($class, $file, %arg) = @_;
+    $scope = 'instance';
     # merge prev tt opts
     my $tt = $arg{TT} || $arg{tt};
     @tt{ keys %$tt } = values %$tt
         if $tt;
     #~ @template{ keys %{$arg{template}} } = values %{$arg{template}}
-    %template = %{merge \%template, $arg{template}}
+   
+    %template = %{merge($arg{template}, \%template)}
         if $arg{template} && %{$arg{template}};
     
     $class->_process( $file,);
@@ -81,6 +91,7 @@ sub _process {# pos file
     return unless $file;
     $file .='.pm'
         if $file =~ s/::/\//g;
+    warn "Processing file [$file]";
     $class->SUPER::new->parse_from_file($file);
 }
 
@@ -288,10 +299,6 @@ sub template {
 =head1 DBIx::POS::Template
 
 ¡ ¡ ¡ ALL GLORY TO GLORIA ! ! !
-
-=head1 VERSION
-
-0.003
 
 =head1 NAME
 

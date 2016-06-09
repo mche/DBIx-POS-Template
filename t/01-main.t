@@ -23,6 +23,7 @@ $pos->{'тест'}->param('bla'=>1, 'blah'=>2,);
 ok($pos->{'тест'}->param('blah') eq 2, 'param set');
 like($pos->{'тест'}->template(where=>'where f.id = ?'), qr/f\.id/, 'template hashref');
 like($pos->template('тест', join=>'select * from "Baz1"'), qr/Baz1/, 'template object');
+ok(scalar keys %$pos eq 1, 'count __FILE__');
 
 my $pos2 = DBIx::POS::Template->new(__FILE__.'.pod', template=>{tables=>{foo=>'"Foo1"'}});
 
@@ -35,17 +36,23 @@ my $st = $pos->template('тест', join => $pos2->{'тест'}->template, );
 like($st, qr/Foo1/, 'template 1 on template 2 defaults');
 like($st, qr/Bar1/, 'template 1 on template 2 defaults');
 ok(ref($pos2->{'тест'}->param()) eq undef, 'undef param');
+ok(scalar keys %$pos2 eq 1, 'count __FILE__.pod');
 
 use lib 't';
 use POS;
 my $pos3 = POS->new(template=>{tables=>{foo=>'таблица'}});
 
-like($pos3->{'тест'}.'', qr/таблица/, 'stringify 3');
-like($pos3->{'тест2'}.'', qr/from ;/, 'no var 3');
+ok(scalar keys %$pos eq 3, 'count __FILE__');
+ok(scalar keys %$pos3 eq 3, 'count POS.pm');
 
-ok(scalar keys %$pos eq 1, 'count __FILE__');
-ok(scalar keys %$pos2 eq 1, 'count __FILE__.pod');
-ok(scalar keys %$pos3 eq 2, 'count POS.pm');
+like($pos3->{'тест тест'}.'', qr/таблица/, 'stringify 3');
+like($pos3->{'тест2'}.'', qr/from ;/, 'no var 3');
+like($pos3->{'тест'}.'', qr/таблица/, 'stringify 3');
+like($pos->{'тест'}.'', qr/таблица/, 'stringify 1');
+my $st2 = $pos->template('тест', join => $pos2->{'тест'}->template, );
+like($st2, qr/таблица/, 'template 1 on template 2 defaults');
+
+
 
 done_testing;
 
