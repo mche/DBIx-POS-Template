@@ -70,6 +70,7 @@ sub instance000 {
         : ($$instance = $class->_instance(@_));
 }
 
+my $instance;
 sub instance {
     my ($class, $file, %arg) = @_;
     $scope = 'instance';
@@ -83,7 +84,7 @@ sub instance {
         if $arg{template} && %{$arg{template}};
     
     $class->_process( $file,);
-    bless \%sql, $class;
+    $instance ||= bless \%sql, $class;
 }
 
 sub _process {# pos file
