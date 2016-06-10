@@ -325,7 +325,7 @@ DBIx::POS::Template - is a fork of L<DBIx::POS>. Define a dictionary of SQL stat
   
     # Some arbitrary parameters as perl code (eval)
     {
-        cache=>1,
+        cache=>1, # will be prepare_cached
     }
 
   =sql
@@ -409,6 +409,8 @@ L<Pod::Parser>
 L<DBIx::POS>
 
 L<Text::Template>
+
+L<DBIx::POS::Sth>
 
 =head1 AUTHOR
 
