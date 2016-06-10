@@ -5,13 +5,13 @@ use base qw{Pod::Parser};
 use Hash::Merge qw(merge);
 
 # Set our version
-our $VERSION = '0.010';
+our $VERSION = '0.011';
 
 =pod
 
 =head1 VERSION
 
-0.010
+0.011
 
 =cut
 
@@ -273,11 +273,11 @@ sub sql {
 
 sub template {
     my ($self, %arg) = @_;
-    return $self->{sql}
-        unless scalar(%arg) || scalar(%{$self->{_template_default}});
+    #~ return $self->{sql}
+        #~ unless scalar(%arg) || scalar(%{$self->{_template_default}});
     $self->{_template} ||= Text::Template->new(
         TYPE => 'STRING',
-        SOURCE => $self->{sql},
+        SOURCE => $self->sql,
         %{$self->{_TT}},
     );
     #~ $self->{_template}->fill_in(HASH=>{%{$self->{_template_default}}, %arg},);#BROKEN_ARG=>\'error!', BROKEN => sub { die @_;},
@@ -295,9 +295,9 @@ sub template {
 
 =encoding utf8
 
-Доброго всем
-
 =head1 DBIx::POS::Template
+
+Доброго всем
 
 ¡ ¡ ¡ ALL GLORY TO GLORIA ! ! !
 
