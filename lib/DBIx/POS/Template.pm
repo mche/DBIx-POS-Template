@@ -5,13 +5,13 @@ use base qw{Pod::Parser};
 use Hash::Merge qw(merge);
 
 # Set our version
-our $VERSION = '0.005';
+our $VERSION = '0.010';
 
 =pod
 
 =head1 VERSION
 
-0.005
+0.010
 
 =cut
 
