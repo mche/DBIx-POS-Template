@@ -4,6 +4,8 @@ use warnings;
 use base qw{Pod::Parser};
 use Hash::Merge qw(merge);
 
+our $VERSION = '0.020';
+
 # Hold data for our pending statement
 my $info = {};
 
@@ -282,7 +284,6 @@ sub template {
     $self->{_template}->fill_in(HASH=>merge(\%arg, $self->{_template_default}));
 }
 
-our $VERSION = '0.020';
 
 =pod
 
