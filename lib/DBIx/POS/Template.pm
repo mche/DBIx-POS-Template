@@ -3,12 +3,11 @@ use strict;
 use warnings;
 use base qw{Pod::Parser};
 use Hash::Merge qw(merge);
-#~ use Eval::Closure;
 
 # Hold data for our pending statement
 my $info = {};
 
-# Hold our SQL
+# SQL instance
 my %sql;
 
 # What command we're looking at
@@ -33,7 +32,6 @@ sub new {
     my ($class, $file, %arg) = @_;
     $scope = 'new';
     my %back = %sql;
-    #~ my %back_tt = %tt;
     
     $tt = $arg{TT} || $arg{tt} || {};
     $template = $arg{template} || {};
@@ -43,22 +41,22 @@ sub new {
     my $new = { %sql };
     
     %sql = %back;
-    #~ %tt = %back_tt;
+
     bless $new, $class;
 }
 
 # Taken directly from Class::Singleton
-sub instance000 {
-    my $class = shift;
-    $scope = 'instance';
-    # get a reference to the _instance variable in the $class package 
-    no strict 'refs';
-    my $instance = \${ "$class\::_instance" };
+#~ sub instance000 {
+    #~ my $class = shift;
+    #~ $scope = 'instance';
+    #~ # get a reference to the _instance variable in the $class package 
+    #~ no strict 'refs';
+    #~ my $instance = \${ "$class\::_instance" };
 
-    defined $$instance
-        ? $$instance
-        : ($$instance = $class->_instance(@_));
-}
+    #~ defined $$instance
+        #~ ? $$instance
+        #~ : ($$instance = $class->_instance(@_));
+#~ }
 
 my $instance;
 sub instance {
@@ -68,7 +66,7 @@ sub instance {
     my $tt = $arg{TT} || $arg{tt};
     @tt{ keys %$tt } = values %$tt
         if $tt;
-    #~ @template{ keys %{$arg{template}} } = values %{$arg{template}}
+    #~ @template{ keys %{$arg{template}} } = values %{$arg{template}} хэш сложный!
    
     %template = %{merge($arg{template}, \%template)}
         if $arg{template} && %{$arg{template}};
@@ -121,7 +119,6 @@ sub command {
     
     if ($command eq 'encoding') {
         $enc = $paragraph;
-        #~ require Encode;
     }
 
     # Remember what command we're in
@@ -142,7 +139,6 @@ sub end_input {
                 template => $scope eq 'new' ? $template : \%template,
                 enc=>$enc,
             );
-            #~ $sql{$info->{name}}->_eval_param() if $sql{$info->{name}}->param;
             # Start with a new empty hashref
             $info = {};
         } else {# Something's missing
@@ -158,9 +154,6 @@ sub textblock {
 
     # Collapse trailing whitespace to a \n
     $paragraph =~ s/\s+$/\n/ms;
-    #~ $enc && ($paragraph = Encode::decode($enc, $paragraph));
-    #~ $enc && 
-    #~ utf8::encode($paragraph);
 
     if ($cmd eq 'desc') {
         $info->{desc} .= $paragraph;
@@ -171,13 +164,6 @@ sub textblock {
     }
 
     elsif ($cmd eq 'sql') {
-        #~ my $eval = eval_closure(
-            #~ source=>'sub { $var }',
-            #~ environment => { '$var'=> \$paragraph },
-        #~ );
-        #~ warn 'EVAL: '. $eval->();
-        #~ $info->{sql} .= $eval->();
-        #~ $info->{sql} .=  Encode::encode($enc, $paragraph);
         $info->{sql} .= $paragraph;
     }
 }
@@ -188,9 +174,6 @@ sub verbatim {
 
     # Collapse trailing whitespace to a \n
     $paragraph =~ s/\s+$/\n/ms;
-    #~ $enc && ($paragraph = Encode::decode($enc, $paragraph));
-    #~ $enc && 
-    #~ utf8::encode($paragraph);
 
     if ($cmd eq 'desc') {
         $info->{desc} .= $paragraph;
@@ -201,14 +184,6 @@ sub verbatim {
     }
 
     elsif ($cmd eq 'sql') {
-        
-        #~ my $eval = eval_closure(
-            #~ source=>'sub { $var }',
-            #~ environment => { '$var'=> \$paragraph },
-        #~ );
-        #~ warn 'EVAL: '. $eval->();
-        #~ $info->{sql} .= $eval->();
-        #~ $info->{sql} .=  Encode::decode($enc, $paragraph);
         $info->{sql} .= $paragraph;
     }
 }
@@ -307,7 +282,7 @@ sub template {
     $self->{_template}->fill_in(HASH=>merge(\%arg, $self->{_template_default}));
 }
 
-our $VERSION = '0.012';
+our $VERSION = '0.020';
 
 =pod
 
@@ -321,7 +296,7 @@ our $VERSION = '0.012';
 
 =head1 VERSION
 
-0.012
+0.020
 
 =head1 NAME
 
