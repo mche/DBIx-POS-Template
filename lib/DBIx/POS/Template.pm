@@ -4,18 +4,16 @@ use warnings;
 use base qw{Pod::Parser};
 use Hash::Merge qw(merge);
 
-our $VERSION = '0.021';
+our $VERSION = '0.022';
 
 # Hold data for our pending statement
 my $info = {};
-
-# SQL instance
+# SQL parse statements
 my %sql;
-
 # What command we're looking at
 my $cmd;
-
-my $enc; # PODs enc
+# PODs enc
+my $enc; 
 
 # Text::Template->new(%TT, %tt)
 our %TT = (
@@ -33,16 +31,17 @@ my $scope; # 'new' | 'instance'
 sub new {
     my ($class, $file, %arg) = @_;
     $scope = 'new';
-    my %back = %sql;
+    #~ my %back = %sql;
     
     $tt = $arg{TT} || $arg{tt} || {};
     $template = $arg{template} || {};
-    %sql = ();
+    #~ %sql = ();
     
     $class->_process( $file,);
     my $new = { %sql };
+    %sql = ();
+    #~ %sql = %back;
     
-    %sql = %back;
 
     bless $new, $class;
 }
@@ -60,9 +59,11 @@ sub new {
         #~ : ($$instance = $class->_instance(@_));
 #~ }
 
-my $instance;
+# class singleton
+my $instance;  
 sub instance {
     my ($class, $file, %arg) = @_;
+    $instance ||= bless {}, $class;
     $scope = 'instance';
     # merge prev tt opts
     my $tt = $arg{TT} || $arg{tt};
@@ -74,7 +75,9 @@ sub instance {
         if $arg{template} && %{$arg{template}};
     
     $class->_process( $file,);
-    $instance ||= bless \%sql, $class;
+    @$instance{ keys %sql } = values %sql;
+    %sql = ();
+    $instance;
 }
 
 sub _process {# pos file
@@ -297,7 +300,7 @@ sub template {
 
 =head1 VERSION
 
-0.021
+0.022
 
 =head1 NAME
 
