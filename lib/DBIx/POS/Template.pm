@@ -63,7 +63,7 @@ sub new {
 my $instance;  
 sub instance {
     my ($class, $file, %arg) = @_;
-    $instance ||= bless {}, $class;
+    $instance ||= bless({}, ref($class) || $class);
     $scope = 'instance';
     # merge prev tt opts
     my $tt = $arg{TT} || $arg{tt};
