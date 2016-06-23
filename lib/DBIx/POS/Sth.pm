@@ -25,7 +25,7 @@ sub sth {
   warn "ST for name: $sth_name\n", $sth->{Statement};
   $sth = undef;
   
-  warn "pg_prepared_statements exists:\n", map (%$_, "\n"), @{$dbh->selectall_arrayref('select * from pg_prepared_statements where name=?;', {Slice=>{}}, ($sth_name))};
+  #~ warn "pg_prepared_statements exists:\n", map (%$_, "\n"), @{$dbh->selectall_arrayref('select * from pg_prepared_statements where name=?;', {Slice=>{}}, ($sth_name))};
   
   if ($param && $param->{cached}) {
     $sth = $dbh->prepare_cached($s)
