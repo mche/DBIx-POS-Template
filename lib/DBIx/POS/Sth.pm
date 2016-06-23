@@ -29,7 +29,13 @@ sub sth {
   
   #~ local $dbh->{TraceLevel} = "3|DBD";
   
-  warn "pg_prepared_statement:\n", Dumper($_) for @{$dbh->selectall_arrayref(q!select * from pg_prepared_statements where regexp_replace(statement, '\$\d+', '?', 'g')=?;!, {Slice=>{}}, ($s))};#"$_->{name}\t$_->{statement}\n"
+  #~ warn "pg_prepared_statement:\n", Dumper($_) for @{$dbh->selectall_arrayref(q!select * from pg_prepared_statements where regexp_replace(statement, '\$\d+', '?', 'g')=?;!, {Slice=>{}}, ($s))};#"$_->{name}\t$_->{statement}\n"
+  
+  if (my $pst = $dbh->selectrow_hashref(q!select * from pg_prepared_statements where regexp_replace(statement, '\$\d+', '?', 'g')=?;!, {Slice=>{}}, ($s))) {
+    $sth = $dbh->prepare("SELECT ".join ", ", map("?::$_", @{$pst->{parameter_types}}));
+    $sth->{pg_prepare_name} = $pst->{name};
+    return $sth;
+  }
   
   #~ warn "pg_prepared_statement:\n", "$_->{name}\t$_->{statement}\n" for @{$dbh->selectall_arrayref(q!select * from pg_prepared_statements;!, {Slice=>{}},)};
   
@@ -51,7 +57,7 @@ $sth = $dbh->prepare($s, {pg_server_prepare => 0,});
 $sth->bind_param(1, 1, SQL_INTEGER);
 $sth->{pg_prepare_name} = 'mystat';
 $sth->execute(123);
-
+DEALLOCATE  name 
 =cut
   
   return $sth;
