@@ -1,5 +1,7 @@
 package DBIx::POS::Sth;
 
+my %cache= ();
+
 sub new {
   my $class = shift;
   my $dbh = shift;
@@ -15,10 +17,17 @@ sub sth {
   die "No such name[$name] in SQL dict! @{[ join ':', keys %$sql  ]}" unless $sql->{$name};
   my $s = $sql->{$name}->template(%$opt, %arg);
   my $p = $sql->{$name}->param;
-
-  return $dbh->prepare_cached($s)
+  
+  $sth->{pg_prepare_name}
+  
+  my $sth = $dbh->prepare_cached($s)
     if $p && $p->{cached};
-  return $dbh->prepare($s);
+  $sth ||= $dbh->prepare($s);
+  
+  warn "Запрос уже подготовлен!", $sth->{pg_prepare_name}
+    if $cache{$sth->{pg_prepare_name}}++;
+
+  return $sth;
 }
 
 1;
