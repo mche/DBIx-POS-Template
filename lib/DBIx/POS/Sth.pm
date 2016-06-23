@@ -20,20 +20,21 @@ sub sth {
   my $s = $sql->{$name}->template(%$opt, %arg);
   my $param = $sql->{$name}->param;
   
-  my $sth = $dbh->prepare($s, {pg_server_prepare => 0,});
-  my $sth_name = $sth->{pg_prepare_name};
-  warn "ST for name: $sth_name\n", $sth->{Statement};
-  $sth = undef;
+  my $sth;# = $dbh->prepare($s, {pg_server_prepare => 0,});
+  #~ my $sth_name = $sth->{pg_prepare_name};
+  #~ warn "ST for name: $sth_name\n", $sth->{Statement};
+  #~ $sth = undef;
   
   #~ warn "pg_prepared_statements exists:\n", map (%$_, "\n"), @{$dbh->selectall_arrayref('select * from pg_prepared_statements where name=?;', {Slice=>{}}, ($sth_name))};
   
   if ($param && $param->{cached}) {
-    $sth = $dbh->prepare_cached($s)
+    $sth = $dbh->prepare_cached($s);
+    warn "ST cached: ", $sth->{pg_prepare_name};
   } else {
     $sth = $dbh->prepare($s);
   }
   
-  warn "ST used: ", $sth->{pg_prepare_name};
+  
   
 =pod
 
