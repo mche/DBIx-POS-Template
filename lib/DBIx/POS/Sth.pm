@@ -22,9 +22,9 @@ sub sth {
     if $p && $p->{cached};
   $sth ||= $dbh->prepare($s);
   
-  warn "Запрос уже подготовлен!", $sth->{pg_prepare_name}
-    if $cache{$sth->{pg_prepare_name}};
-  $cache{$sth->{pg_prepare_name}}++;
+  #~ warn "Запрос уже подготовлен!", $sth->{pg_prepare_name}
+    #~ if $cache{$sth->{pg_prepare_name}};
+  #~ $cache{$sth->{pg_prepare_name}}++;
 
   return $sth;
 }
