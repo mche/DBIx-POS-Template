@@ -25,7 +25,9 @@ sub sth {
   #~ warn "ST for name: $sth_name\n", $sth->{Statement};
   #~ $sth = undef;
   
-  warn "pg_prepared_statement:\n", "$_->{name}\t$_->{statement}\n" for @{$dbh->selectall_arrayref('select * from pg_prepared_statements;', {Slice=>{}},)};
+  local $dbh->{TraceLevel} = "3|DBD";
+  
+  #~ warn "pg_prepared_statement:\n", "$_->{name}\t$_->{statement}\n" for @{$dbh->selectall_arrayref('select * from pg_prepared_statements;', {Slice=>{}},)};
   
   if ($param && $param->{cached}) {
     $sth = $dbh->prepare_cached($s);
