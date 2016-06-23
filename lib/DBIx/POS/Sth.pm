@@ -18,7 +18,7 @@ sub sth {
   my %arg = @_;
   die "No such name[$name] in SQL dict! @{[ join ':', keys %$sql  ]}" unless $sql->{$name};
   #~ my $s = .
-  my $s = $sql->{$name}->template(%$opt, %arg).sprintf("\n--??--%s", $sql->{$name}->name);
+  my $s = $sql->{$name}->template(%$opt, %arg).sprintf("\n--name: %s", $sql->{$name}->name);
   my $param = $sql->{$name}->param;
   
   my $sth;# = $dbh->prepare($s, {pg_server_prepare => 0,});
@@ -28,9 +28,9 @@ sub sth {
   
   #~ local $dbh->{TraceLevel} = "3|DBD";
   
-  #~ warn "pg_prepared_statement:\n", "$_->{name}\t$_->{statement}\n" for @{$dbh->selectall_arrayref(q!select * from pg_prepared_statements where regexp_replace(statement, '\$\d+', '?', 'g')=?;!, {Slice=>{}}, ($s))};
+  warn "pg_prepared_statement:\n", "$_->{name}\t$_->{statement}\n" for @{$dbh->selectall_arrayref(q!select * from pg_prepared_statements where regexp_replace(statement, '\$\d+', '?', 'g')=?;!, {Slice=>{}}, ($s))};
   
-  warn "pg_prepared_statement:\n", "$_->{name}\t$_->{statement}\n" for @{$dbh->selectall_arrayref(q!select * from pg_prepared_statements;!, {Slice=>{}},)};
+  #~ warn "pg_prepared_statement:\n", "$_->{name}\t$_->{statement}\n" for @{$dbh->selectall_arrayref(q!select * from pg_prepared_statements;!, {Slice=>{}},)};
   
   if ($param && $param->{cached}) {
     $sth = $dbh->prepare_cached($s);
