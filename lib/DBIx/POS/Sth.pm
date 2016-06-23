@@ -20,7 +20,11 @@ sub sth {
   my $s = $sql->{$name}->template(%$opt, %arg);
   my $param = $sql->{$name}->param;
   
-  my $sth;
+  my $sth = $dbh->prepare($s, {pg_server_prepare => 0,});
+  warn "ST: ", $sth->{Statement};
+  $sth = undef;
+  
+  #~ warn "pg_prepared_statements exists:\n", map (%$_, "\n"), @{$dbh->selectall_arrayref('select * from pg_prepared_statements where statement=?;', {Slice=>{}}, ($s))};
   
   if ($param && $param->{cached}) {
     $sth = $dbh->prepare_cached($s)
@@ -28,7 +32,15 @@ sub sth {
     $sth = $dbh->prepare($s);
   }
   
-  warn "pg_prepared_statements:\n", map %$_, @{$dbh->selectall_arrayref('select * from pg_prepared_statements;', {Slice=>{}}, )};
+=pod
+
+$dbh->do('PREPARE mystat AS SELECT COUNT(*) FROM pg_class WHERE reltuples < ?');
+$sth = $dbh->prepare($s, {pg_server_prepare => 0,});
+$sth->bind_param(1, 1, SQL_INTEGER);
+$sth->{pg_prepare_name} = 'mystat';
+$sth->execute(123);
+
+=cut
   
   return $sth;
   
