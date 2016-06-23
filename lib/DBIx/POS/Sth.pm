@@ -1,25 +1,23 @@
 package DBIx::POS::Sth;
 use strict;
 use utf8;
-use Data::Dumper;
+#~ use Data::Dumper;
 
 
 sub new {
-  my $class = shift;
-  my $dbh = shift;
-  my $pos = shift;
+  my ($class, $dbh, $pos) = map shift, 0..2;
   my %opt = @_;
   return bless [$dbh, $pos, \%opt], $class;
 }
 
 sub sth {
-  my ($dbh, $sql, $opt) = @{ shift() };
+  my ($dbh, $pos, $opt) = @{ shift() };
   my $name = shift;
   my %arg = @_;
-  die "No such name[$name] in SQL dict! @{[ join ':', keys %$sql  ]}" unless $sql->{$name};
+  die "No such name[$name] in POS-SQL dict! @{[ join ':', keys %$pos  ]}" unless $pos->{$name};
   #~ my $s = .
-  my $s = $sql->{$name}->template(%$opt, %arg).sprintf("\n--STH name: %s", $sql->{$name}->name);
-  my $param = $sql->{$name}->param;
+  my $s = $pos->{$name}->template(%$opt, %arg).sprintf("\n--STH name: %s", $pos->{$name}->name);
+  my $param = $pos->{$name}->param;
   
   my $sth;
   
