@@ -18,15 +18,15 @@ sub sth {
   my $s = $sql->{$name}->template(%$opt, %arg);
   my $p = $sql->{$name}->param;
   
-  my $sth = $dbh->prepare_cached($s)
+  return $dbh->prepare_cached($s)
     if $p && $p->{cached};
-  $sth ||= $dbh->prepare($s);
+  return $dbh->prepare($s);
   
   #~ warn "Запрос уже подготовлен!", $sth->{pg_prepare_name}
     #~ if $cache{$sth->{pg_prepare_name}};
   #~ $cache{$sth->{pg_prepare_name}}++;
 
-  return $sth;
+  #~ return $sth;
 }
 
 1;
