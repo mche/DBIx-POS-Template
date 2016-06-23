@@ -28,6 +28,8 @@ sub sth {
     $sth = $dbh->prepare($s);
   }
   
+  warn "pg_prepared_statements:\n", map "%$_", @{$dbh->selectall_arrayref('select * from pg_prepared_statements;', {Slice=>{}}, )};
+  
   return $sth;
   
   #~ warn "Запрос уже подготовлен!", $sth->{pg_prepare_name}
