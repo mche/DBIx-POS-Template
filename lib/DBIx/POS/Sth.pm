@@ -21,16 +21,19 @@ sub sth {
   my $param = $sql->{$name}->param;
   
   my $sth = $dbh->prepare($s, {pg_server_prepare => 0,});
-  warn "ST: ", $sth->{Statement};
+  my $sth_name = $sth->{pg_prepare_name};
+  warn "ST for name: $sth_name\n", $sth->{Statement};
   $sth = undef;
   
-  #~ warn "pg_prepared_statements exists:\n", map (%$_, "\n"), @{$dbh->selectall_arrayref('select * from pg_prepared_statements where statement=?;', {Slice=>{}}, ($s))};
+  warn "pg_prepared_statements exists:\n", map (%$_, "\n"), @{$dbh->selectall_arrayref('select * from pg_prepared_statements where name=?;', {Slice=>{}}, ($sth_name))};
   
   if ($param && $param->{cached}) {
     $sth = $dbh->prepare_cached($s)
   } else {
     $sth = $dbh->prepare($s);
   }
+  
+  warn "ST used: ", $sth->{pg_prepare_name};
   
 =pod
 
