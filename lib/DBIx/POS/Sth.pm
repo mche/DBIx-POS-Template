@@ -1,6 +1,7 @@
 package DBIx::POS::Sth;
 use strict;
 use utf8;
+use Data::Dumper;
 
 my %cache= ();
 
@@ -18,7 +19,7 @@ sub sth {
   my %arg = @_;
   die "No such name[$name] in SQL dict! @{[ join ':', keys %$sql  ]}" unless $sql->{$name};
   #~ my $s = .
-  my $s = $sql->{$name}->template(%$opt, %arg).sprintf("\n--name: %s", $sql->{$name}->name);
+  my $s = $sql->{$name}->template(%$opt, %arg).sprintf("\n--STH name: %s", $sql->{$name}->name);
   my $param = $sql->{$name}->param;
   
   my $sth;# = $dbh->prepare($s, {pg_server_prepare => 0,});
@@ -28,7 +29,7 @@ sub sth {
   
   #~ local $dbh->{TraceLevel} = "3|DBD";
   
-  warn "pg_prepared_statement:\n", "$_->{name}\t$_->{statement}\n" for @{$dbh->selectall_arrayref(q!select * from pg_prepared_statements where regexp_replace(statement, '\$\d+', '?', 'g')=?;!, {Slice=>{}}, ($s))};
+  warn "pg_prepared_statement:\n", Dumper($_) for @{$dbh->selectall_arrayref(q!select * from pg_prepared_statements where regexp_replace(statement, '\$\d+', '?', 'g')=?;!, {Slice=>{}}, ($s))};#"$_->{name}\t$_->{statement}\n"
   
   #~ warn "pg_prepared_statement:\n", "$_->{name}\t$_->{statement}\n" for @{$dbh->selectall_arrayref(q!select * from pg_prepared_statements;!, {Slice=>{}},)};
   
