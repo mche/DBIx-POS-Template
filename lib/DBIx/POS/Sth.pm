@@ -25,11 +25,11 @@ sub sth {
   #~ warn "ST for name: $sth_name\n", $sth->{Statement};
   #~ $sth = undef;
   
-  #~ warn "pg_prepared_statements exists:\n", map (%$_, "\n"), @{$dbh->selectall_arrayref('select * from pg_prepared_statements where name=?;', {Slice=>{}}, ($sth_name))};
+  warn "pg_prepared_statement:\n", "$_->{name}\t$_->{statement}\n" for @{$dbh->selectall_arrayref('select * from pg_prepared_statements;', {Slice=>{}},)};
   
   if ($param && $param->{cached}) {
     $sth = $dbh->prepare_cached($s);
-    warn "ST cached: ", $sth->{pg_prepare_name};
+    #~ warn "ST cached: ", $sth->{pg_prepare_name};
   } else {
     $sth = $dbh->prepare($s);
   }
