@@ -3,8 +3,9 @@ use strict;
 use warnings;
 use base qw{Pod::Parser};
 use Hash::Merge qw(merge);
+use Encode;
 
-our $VERSION = '0.026';
+our $VERSION = '0.027';
 
 # Hold data for our pending statement
 my $info = {};
@@ -138,11 +139,15 @@ sub end_input {
         #~ if (scalar (grep {m/^(?:name|short|desc|sql)$/} keys %{$info}) == 3) {
         if (defined($info->{name}) && defined($info->{sql})) {
             # Grab the entire content for the %sql hash
+            if ($enc) {
+                my @enc = qw(name desc param short sql);
+                @$info{ @enc } = map Encode::decode($enc, $info->{$_}), @enc;
+            }
             $sql{$info->{name}} = DBIx::POS::Statement->new (
                 $info,
                 tt => {%TT, $scope eq 'new' ? %$tt : %tt},
                 template => $scope eq 'new' ? $template : \%template,
-                enc=>$enc,
+                #~ enc=>$enc,
             );
             # Start with a new empty hashref
             $info = {};
@@ -199,7 +204,7 @@ package DBIx::POS::Statement;
 #=============================================
 use Text::Template;
 use Hash::Merge qw(merge);
-use Encode;
+
 
 use overload '""' => sub { shift->template };
 
@@ -210,12 +215,12 @@ sub new {
     my %arg = @_;
     $self->{_TT} = $arg{TT} || $arg{tt} ;
     $self->{_template_default} = $arg{template};
-    $self->{_enc} = $arg{enc};
+    #~ $self->{_enc} = $arg{enc};
     bless ($self, $class);
-    if (my $enc = $self->{_enc}) {
-        my @enc = qw(name desc param short sql);
-        @$self{ @enc } = map Encode::decode($enc, $self->{$_}), @enc;
-    }
+    #~ if (my $enc = $self->{_enc}) {
+        #~ my @enc = qw(name desc param short sql);
+        #~ @$self{ @enc } = map Encode::decode($enc, $self->{$_}), @enc;
+    #~ }
     $self->_eval_param();
     return $self;
 }
@@ -300,7 +305,7 @@ sub template {
 
 =head1 VERSION
 
-0.026
+0.027
 
 =head1 NAME
 
