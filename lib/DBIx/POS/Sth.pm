@@ -1,4 +1,6 @@
 package DBIx::POS::Sth;
+use strict;
+use utf8;
 
 my %cache= ();
 
@@ -16,11 +18,17 @@ sub sth {
   my %arg = @_;
   die "No such name[$name] in SQL dict! @{[ join ':', keys %$sql  ]}" unless $sql->{$name};
   my $s = $sql->{$name}->template(%$opt, %arg);
-  my $p = $sql->{$name}->param;
+  my $param = $sql->{$name}->param;
   
-  return $dbh->prepare_cached($s)
-    if $p && $p->{cached};
-  return $dbh->prepare($s);
+  my $sth;
+  
+  if ($param && $param->{cached}) {
+    $sth = $dbh->prepare_cached($s)
+  } else {
+    $sth = $dbh->prepare($s);
+  }
+  
+  return $sth;
   
   #~ warn "Запрос уже подготовлен!", $sth->{pg_prepare_name}
     #~ if $cache{$sth->{pg_prepare_name}};
