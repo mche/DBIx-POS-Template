@@ -25,9 +25,9 @@ sub sth {
   #~ warn "ST for name: $sth_name\n", $sth->{Statement};
   #~ $sth = undef;
   
-  local $dbh->{TraceLevel} = "3|DBD";
+  #~ local $dbh->{TraceLevel} = "3|DBD";
   
-  #~ warn "pg_prepared_statement:\n", "$_->{name}\t$_->{statement}\n" for @{$dbh->selectall_arrayref('select * from pg_prepared_statements;', {Slice=>{}},)};
+  warn "pg_prepared_statement:\n", "$_->{name}\t$_->{statement}\n" for @{$dbh->selectall_arrayref(q!select * from pg_prepared_statements where regexp_replace(statement, '\$\d+', '?', 'g')=?;!, {Slice=>{}}, ($s))};
   
   if ($param && $param->{cached}) {
     $sth = $dbh->prepare_cached($s);
@@ -39,6 +39,8 @@ sub sth {
   
   
 =pod
+
+https://www.depesz.com/2012/12/02/what-is-the-point-of-bouncing/
 
 $dbh->do('PREPARE mystat AS SELECT COUNT(*) FROM pg_class WHERE reltuples < ?');
 $sth = $dbh->prepare($s, {pg_server_prepare => 0,});
