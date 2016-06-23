@@ -17,7 +17,8 @@ sub sth {
   my $name = shift;
   my %arg = @_;
   die "No such name[$name] in SQL dict! @{[ join ':', keys %$sql  ]}" unless $sql->{$name};
-  my $s = sprintf("--??--%s\n", $sql->{$name}->name).$sql->{$name}->template(%$opt, %arg);
+  #~ my $s = .
+  my $s = $sql->{$name}->template(%$opt, %arg).sprintf("\n--??--%s", $sql->{$name}->name);
   my $param = $sql->{$name}->param;
   
   my $sth;# = $dbh->prepare($s, {pg_server_prepare => 0,});
