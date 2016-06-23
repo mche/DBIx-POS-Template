@@ -3,7 +3,6 @@ use strict;
 use utf8;
 use Data::Dumper;
 
-my %cache= ();
 
 sub new {
   my $class = shift;
@@ -22,10 +21,7 @@ sub sth {
   my $s = $sql->{$name}->template(%$opt, %arg).sprintf("\n--STH name: %s", $sql->{$name}->name);
   my $param = $sql->{$name}->param;
   
-  my $sth;# = $dbh->prepare($s, {pg_server_prepare => 0,});
-  #~ my $sth_name = $sth->{pg_prepare_name};
-  #~ warn "ST for name: $sth_name\n", $sth->{Statement};
-  #~ $sth = undef;
+  my $sth;
   
   #~ local $dbh->{TraceLevel} = "3|DBD";
   
