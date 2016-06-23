@@ -18,8 +18,6 @@ sub sth {
   my $s = $sql->{$name}->template(%$opt, %arg);
   my $p = $sql->{$name}->param;
   
-  $sth->{pg_prepare_name}
-  
   my $sth = $dbh->prepare_cached($s)
     if $p && $p->{cached};
   $sth ||= $dbh->prepare($s);
