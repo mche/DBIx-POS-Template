@@ -20,17 +20,17 @@ sub sth {
   my $param = $pos->{$name}->param;
   
   my $sth;
-  my $connect_pid = $dbh->{private_connect_pid};
+  my $connect_pid = $dbh->{private_connect_pid} || $$;
   #~ local $dbh->{TraceLevel} = "3|DBD";
   
   #~ warn "pg_prepared_statement:\n", Dumper($_) for @{$dbh->selectall_arrayref(q!select * from pg_prepared_statements where regexp_replace(statement, '\$\d+', '?', 'g')=?;!, {Slice=>{}}, ($sql))};#"$_->{name}\t$_->{statement}\n"
   
-  my $st = $dbh->selectall_arrayref(q!select *, ?::int as parent_pid, name ~ (?::text || '_') as parent_st from pg_prepared_statements where md5(regexp_replace(statement, '\$\d+', '?', 'g'))=md5(?);!, {Slice=>{}}, (($connect_pid) x 2, $sql));# name ~ (?::text || '_') and 
+  
   
   #~ warn __PACKAGE__."\n",Dumper($st)
     #~ if @$st;
   
-  my $self_st = (grep $_->{name} =~ /$$\_/, @$st)[0];
+  
   
   #~ if ($self_st) {
     #~ warn __PACKAGE__." свой кэшированный запрос";
@@ -39,12 +39,22 @@ sub sth {
     #~ return $sth;
   #~ }
   
-  my $parent_st = (grep { $_->{name} =~ /$connect_pid\_/ } @$st)[0];
+  
   
   #~ warn __PACKAGE__."\n",Dumper($parent_st)
     #~ if $parent_st;
   
-  if ( ($connect_pid ne $$) && !$self_st && $parent_st ) { # потомок лезет в соединение родителя
+  #~ if ( ($connect_pid ne $$) && !$self_st && $parent_st ) { # потомок лезет в соединение родителя
+  for (1..($connect_pid ne $$)) {
+    my $st = $dbh->selectall_arrayref(q!select *, ?::int as parent_pid, name ~ (?::text || '_') as parent_st from pg_prepared_statements where md5(regexp_replace(statement, '\$\d+', '?', 'g'))=md5(?);!, {Slice=>{}}, (($connect_pid) x 2, $sql));# name ~ (?::text || '_') and 
+    last unless @$st;
+    my $self_st = (grep {$_->{name} =~ /$$\_/} @$st)[0]
+      and warn "Не перекэшировать"
+      and last;
+      
+    my $parent_st = (grep { $_->{name} =~ /$connect_pid\_/ } @$st)[0]
+      or warn "Нет конфликта"
+      and last;
     # создать для потомка свой статемент
     my $st_name = $parent_st->{name};
     $st_name =~ s|$connect_pid\_|$$.'_'|e;
@@ -53,7 +63,7 @@ sub sth {
       if $parent_st->{parameter_types} && @{$parent_st->{parameter_types}};
     $dbh->do("PREPARE $st_name $types as\n$parent_st->{statement}");
     #~ $sth = $dbh->prepare("SELECT ".join ", ", map("?::$_", @{$parent_st->{parameter_types}}));
-    $sth = $dbh->prepare($sql);
+    $sth = $dbh->prepare_cached($sql);
     $sth->{pg_prepare_name} = $st_name;
     return $sth;
   }
