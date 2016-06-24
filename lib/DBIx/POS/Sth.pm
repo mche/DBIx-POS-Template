@@ -33,6 +33,9 @@ sub sth {
   
   #~ warn "pg_prepared_statement:\n", "$_->{name}\t$_->{statement}\n" for @{$dbh->selectall_arrayref(q!select * from pg_prepared_statements;!, {Slice=>{}},)};
   
+  warn "PIDS: $dbh->{pg_pid} <> $$"
+    unless $dbh->{pg_pid} eq $$;
+  
   if ($param && $param->{cached}) {
     $sth = $dbh->prepare_cached($s);
     #~ warn "ST cached: ", $sth->{pg_prepare_name};
