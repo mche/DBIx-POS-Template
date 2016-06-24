@@ -1,7 +1,7 @@
 package DBIx::POS::Sth;
 use strict;
 use utf8;
-#~ use Data::Dumper;
+use Data::Dumper;
 
 
 sub new {
@@ -16,7 +16,7 @@ sub sth {
   my %arg = @_;
   die "No such name[$name] in POS-SQL dict! @{[ join ':', keys %$pos  ]}" unless $pos->{$name};
 
-  my $sql = $pos->{$name}->template(%$opt, %arg).sprintf("\n--DBIx::POS::Sth name: %s", $pos->{$name}->name);
+  my $sql = $pos->{$name}->template(%$opt, %arg).sprintf("\n--DBIx::POS::Sth name: [%s]", $pos->{$name}->name);
   my $param = $pos->{$name}->param;
   
   my $sth;
