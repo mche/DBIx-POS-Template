@@ -20,15 +20,15 @@ sub sth {
   my $param = $pos->{$name}->param;
   
   my $sth;
-  my $parent_pid = $dbh->{private_dbh_pid} || $dbh->{pg_pid};
+  my $parent_pid = $dbh->{private_connect_pid};
   #~ local $dbh->{TraceLevel} = "3|DBD";
   
   #~ warn "pg_prepared_statement:\n", Dumper($_) for @{$dbh->selectall_arrayref(q!select * from pg_prepared_statements where regexp_replace(statement, '\$\d+', '?', 'g')=?;!, {Slice=>{}}, ($sql))};#"$_->{name}\t$_->{statement}\n"
   
   my $st = $dbh->selectall_arrayref(q!select *, ?::int as parent_pid, name ~ (?::text || '_') as parent_st from pg_prepared_statements where md5(regexp_replace(statement, '\$\d+', '?', 'g'))=md5(?);!, {Slice=>{}}, (($parent_pid) x 2, $sql));# name ~ (?::text || '_') and 
   
-  warn __PACKAGE__."\n",Dumper($st)
-    if @$st;
+  #~ warn __PACKAGE__."\n",Dumper($st)
+    #~ if @$st;
   
   #~ my $self_st = (grep $_->{name} ~= /$$\_/, @$sts)[0];
   
@@ -48,9 +48,9 @@ sub sth {
   
   if ( ($dbh->{pg_pid} ne $$) && $parent_st ) { # потомок лезет в соединение родителя
     # создать для потомка свой статемент
-    warn __PACKAGE__." клонирую кэшированный запрос родителя";
     my $st_name = $parent_st->{name};
-    $name =~ s|$parent_pid\_|$$.'_'|e;
+    $st_name =~ s|$parent_pid\_|$$.'_'|e;
+    warn __PACKAGE__." клонирую кэшированный запрос родителя [$parent_st->{name}] >>>> [$st_name]";
     my $types = '('.join(',', @{$parent_st->{parameter_types}}).')'
       if $parent_st->{parameter_types} && @{$parent_st->{parameter_types}};
     $dbh->do("PREPARE $st_name $types as\n$parent_st->{statement}");
