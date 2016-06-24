@@ -27,8 +27,7 @@ sub sth {
   
   my $st = $dbh->selectall_arrayref(q!select * from pg_prepared_statements where md5(regexp_replace(statement, '\$\d+', '?', 'g'))=md5(?);!, {Slice=>{}}, ($sql));# name ~ (?::text || '_') and 
   
-  warn __PACKAGE__.Dumper($st)
-    if @$st;
+  
   
   #~ my $self_st = (grep $_->{name} ~= /$$\_/, @$sts)[0];
   
@@ -39,13 +38,18 @@ sub sth {
     #~ return $sth;
   #~ }
   
-  my $parent_st = (grep { $_->{name} =~ /$dbh->{pg_pid}_/ } @$st)[0];
+  my $parent_pid = $dbh->{pg_pid};
+  
+  my $parent_st = (grep { $_->{name} =~ /$parent_pid\_/ } @$st)[0];
+  
+  warn __PACKAGE__."\n",Dumper($parent_st)
+    if $parent_st;
   
   if ( $dbh->{pg_pid} ne $$ && $parent_st ) { # потомок лезет в соединение родителя
     # создать для потомка свой статемент
     warn __PACKAGE__." клонирую кэшированный запрос родителя";
     my $st_name = $parent_st->{name};
-    $name =~ s|$dbh->{pg_pid}_|$$.'_'|e;
+    $name =~ s|$parent_pid\_|$$.'_'|e;
     my $types = '('.join(',', @{$parent_st->{parameter_types}}).')'
       if $parent_st->{parameter_types} && @{$parent_st->{parameter_types}};
     $dbh->do("PREPARE $st_name $types as\n$parent_st->{statement}");
