@@ -15,32 +15,54 @@ sub sth {
   my $name = shift;
   my %arg = @_;
   die "No such name[$name] in POS-SQL dict! @{[ join ':', keys %$pos  ]}" unless $pos->{$name};
-  #~ my $s = .
-  my $s = $pos->{$name}->template(%$opt, %arg).sprintf("\n--STH name: %s", $pos->{$name}->name);
+
+  my $sql = $pos->{$name}->template(%$opt, %arg).sprintf("\n--DBIx::POS::Sth name: %s", $pos->{$name}->name);
   my $param = $pos->{$name}->param;
   
   my $sth;
   
   #~ local $dbh->{TraceLevel} = "3|DBD";
   
-  #~ warn "pg_prepared_statement:\n", Dumper($_) for @{$dbh->selectall_arrayref(q!select * from pg_prepared_statements where regexp_replace(statement, '\$\d+', '?', 'g')=?;!, {Slice=>{}}, ($s))};#"$_->{name}\t$_->{statement}\n"
+  #~ warn "pg_prepared_statement:\n", Dumper($_) for @{$dbh->selectall_arrayref(q!select * from pg_prepared_statements where regexp_replace(statement, '\$\d+', '?', 'g')=?;!, {Slice=>{}}, ($sql))};#"$_->{name}\t$_->{statement}\n"
   
-  if (my $pst = $dbh->selectrow_hashref(q!select * from pg_prepared_statements where regexp_replace(statement, '\$\d+', '?', 'g')=?;!, {Slice=>{}}, ($s))) {
-    $sth = $dbh->prepare("SELECT ".join ", ", map("?::$_", @{$pst->{parameter_types}}));
-    $sth->{pg_prepare_name} = $pst->{name};
+  my $st = $dbh->selectall_arrayref(q!select * from pg_prepared_statements where name ~ (?::text || '_') and md5(regexp_replace(statement, '\$\d+', '?', 'g'))=md5(?);!, undef, ($dbh->{pg_pid}, $sql));# {Slice=>{}}
+  
+  #~ my $self_st = (grep $_->{name} ~= /$$\_/, @$sts)[0];
+  
+  #~ if ($self_st) {
+    #~ warn __PACKAGE__." свой кэшированный запрос";
+    #~ $sth = $dbh->prepare($sql);
+    #~ $sth->{pg_prepare_name} = $self_st->{name};
+    #~ return $sth;
+  #~ }
+  
+  my $parent_st  = $st;
+  #~ ( $parent_st  = (grep($_->{name} ~= /$dbh->{pg_pid}_/, @$sts))[0] )
+  
+  if ( $dbh->{pg_pid} ne $$ && $parent_st ) { # потомок лезет в соединение родителя
+    # создать для потомка свой статемент
+    warn __PACKAGE__." клонирую кэшированный запрос родителя";
+    my $st_name = $parent_st->{name};
+    $name =~ s|$dbh->{pg_pid}_|$$.'_'|e;
+    my $types = '('.join(',', @{$parent_st->{parameter_types}}).')'
+      if $parent_st->{parameter_types} && @{$parent_st->{parameter_types}};
+    $dbh->do("PREPARE $st_name $types as\n$parent_st->{statement}");
+    #~ $sth = $dbh->prepare("SELECT ".join ", ", map("?::$_", @{$parent_st->{parameter_types}}));
+    $sth = $dbh->prepare($sql);
+    $sth->{pg_prepare_name} = $st_name;
     return $sth;
   }
   
   #~ warn "pg_prepared_statement:\n", "$_->{name}\t$_->{statement}\n" for @{$dbh->selectall_arrayref(q!select * from pg_prepared_statements;!, {Slice=>{}},)};
   
-  warn "PIDS: $dbh->{pg_pid} <> $$"
-    unless $dbh->{pg_pid} eq $$;
+  #~ warn "PIDS: $dbh->{pg_pid} <> $$"
+    #~ unless $dbh->{pg_pid} eq $$;
   
   if ($param && $param->{cached}) {
-    $sth = $dbh->prepare_cached($s);
+    $sth = $dbh->prepare_cached($sql);
     #~ warn "ST cached: ", $sth->{pg_prepare_name};
   } else {
-    $sth = $dbh->prepare($s);
+    $sth = $dbh->prepare($sql);
   }
   
   
