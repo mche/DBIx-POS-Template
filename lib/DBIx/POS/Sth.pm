@@ -10,6 +10,8 @@ sub new {
   return bless [$dbh, $pos, \%opt], $class;
 }
 
+my %clone;
+
 sub sth {
   my ($dbh, $pos, $opt) = @{ shift() };
   my $name = shift;
@@ -46,18 +48,30 @@ sub sth {
   
   #~ if ( ($connect_pid ne $$) && !$self_st && $parent_st ) { # потомок лезет в соединение родителя
   for (1..($connect_pid ne $$)) {
-    my $st = $dbh->selectall_arrayref(q!select *, ?::int as parent_pid, name ~ (?::text || '_') as parent_st from pg_prepared_statements where md5(regexp_replace(statement, '\$\d+', '?', 'g'))=md5(?);!, {Slice=>{}}, (($connect_pid) x 2, $sql));# name ~ (?::text || '_') and 
+    my $st = $dbh->selectall_arrayref(q!select *, ?::int as parent_pid, name ~ (?::text || '_') as parent_st from pg_prepared_statements where md5(regexp_replace(statement, '\$\d+', '?', 'g'))=md5(?);!, {Slice=>{}}, (($connect_pid) x 2, $sql,));# name ~ (?::text || '_') and 
     last unless @$st;
+    
+    #~ my $clone = (grep {defined $clone{$_->{md5_sql}}} @$st)[0];
+    
+    #~ warn "Клон [$clone->{name}] из кэша"
+      #~ and return $clone{$clone->{md5_sql}}
+      #~ if $clone;
+    
     my $self_st = (grep {$_->{name} =~ /$$\_/} @$st)[0]
-      and warn "Не перекэшировать"
+      and warn __PACKAGE__." Не переклонировать себя"
       and last;
       
     my $parent_st = (grep { $_->{name} =~ /$connect_pid\_/ } @$st)[0]
-      or warn "Нет конфликта"
+      or warn __PACKAGE__." Нет конфликта"
       and last;
     # создать для потомка свой статемент
     my $st_name = $parent_st->{name};
     $st_name =~ s|$connect_pid\_|$$.'_'|e;
+    
+    warn __PACKAGE__." Клон [$st_name] из кэша"
+      and return $clone{$st_name}
+      if defined $clone{$st_name};
+    
     warn __PACKAGE__." клонирую кэшированный запрос родителя [$parent_st->{name}] >>>> [$st_name]";
     my $types = '('.join(',', @{$parent_st->{parameter_types}}).')'
       if $parent_st->{parameter_types} && @{$parent_st->{parameter_types}};
@@ -65,6 +79,7 @@ sub sth {
     #~ $sth = $dbh->prepare("SELECT ".join ", ", map("?::$_", @{$parent_st->{parameter_types}}));
     $sth = $dbh->prepare_cached($sql);
     $sth->{pg_prepare_name} = $st_name;
+    $clone{$st_name} = $sth;
     return $sth;
   }
   
