@@ -25,7 +25,7 @@ sub sth {
   
   #~ warn "pg_prepared_statement:\n", Dumper($_) for @{$dbh->selectall_arrayref(q!select * from pg_prepared_statements where regexp_replace(statement, '\$\d+', '?', 'g')=?;!, {Slice=>{}}, ($sql))};#"$_->{name}\t$_->{statement}\n"
   
-  my $st = $dbh->selectall_arrayref(q!select *, name ~ (?::text || '_') as parent_st from pg_prepared_statements where md5(regexp_replace(statement, '\$\d+', '?', 'g'))=md5(?);!, {Slice=>{}}, ($parent_pid, $sql));# name ~ (?::text || '_') and 
+  my $st = $dbh->selectall_arrayref(q!select *, ? as parent_pid, name ~ (?::text || '_') as parent_st from pg_prepared_statements where md5(regexp_replace(statement, '\$\d+', '?', 'g'))=md5(?);!, {Slice=>{}}, (($parent_pid) x 2, $sql));# name ~ (?::text || '_') and 
   
   warn __PACKAGE__."\n",Dumper($st)
     if @$st;
