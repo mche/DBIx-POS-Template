@@ -25,7 +25,10 @@ sub sth {
   
   #~ warn "pg_prepared_statement:\n", Dumper($_) for @{$dbh->selectall_arrayref(q!select * from pg_prepared_statements where regexp_replace(statement, '\$\d+', '?', 'g')=?;!, {Slice=>{}}, ($sql))};#"$_->{name}\t$_->{statement}\n"
   
-  my $st = $dbh->selectrow_hashref(q!select * from pg_prepared_statements where name ~ (?::text || '_') and md5(regexp_replace(statement, '\$\d+', '?', 'g'))=md5(?);!, undef, ($dbh->{pg_pid}, $sql));# {Slice=>{}}
+  my $st = $dbh->selectall_arrayref(q!select * from pg_prepared_statements where md5(regexp_replace(statement, '\$\d+', '?', 'g'))=md5(?);!, {Slice=>{}}, ($sql));# name ~ (?::text || '_') and 
+  
+  warn __PACKAGE__.Dumper($st)
+    if @$st;
   
   #~ my $self_st = (grep $_->{name} ~= /$$\_/, @$sts)[0];
   
@@ -36,7 +39,7 @@ sub sth {
     #~ return $sth;
   #~ }
   
-  my $parent_st  = $st;
+  my $parent_st;
   #~ ( $parent_st  = (grep($_->{name} ~= /$dbh->{pg_pid}_/, @$sts))[0] )
   
   if ( $dbh->{pg_pid} ne $$ && $parent_st ) { # потомок лезет в соединение родителя
