@@ -20,7 +20,7 @@ sub sth {
   my $param = $pos->{$name}->param;
   
   my $sth;
-  my $parent_pid = $dbh->{dbh_pid} || $dbh->{pg_pid};
+  my $parent_pid = (eval $dbh->_pid) || $dbh->{pg_pid};
   #~ local $dbh->{TraceLevel} = "3|DBD";
   
   #~ warn "pg_prepared_statement:\n", Dumper($_) for @{$dbh->selectall_arrayref(q!select * from pg_prepared_statements where regexp_replace(statement, '\$\d+', '?', 'g')=?;!, {Slice=>{}}, ($sql))};#"$_->{name}\t$_->{statement}\n"
