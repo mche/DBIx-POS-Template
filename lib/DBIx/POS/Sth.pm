@@ -39,8 +39,7 @@ sub sth {
     #~ return $sth;
   #~ }
   
-  my $parent_st;
-  #~ ( $parent_st  = (grep($_->{name} ~= /$dbh->{pg_pid}_/, @$sts))[0] )
+  my $parent_st = (grep { $_->{name} =~ /$dbh->{pg_pid}_/ } @$st)[0];
   
   if ( $dbh->{pg_pid} ne $$ && $parent_st ) { # потомок лезет в соединение родителя
     # создать для потомка свой статемент
