@@ -5,7 +5,7 @@ use base qw{Pod::Parser};
 use Hash::Merge qw(merge);
 use Encode;
 
-our $VERSION = '0.054';
+our $VERSION = '0.055';
 
 # Hold data for our pending statement
 my $info = {};
@@ -305,7 +305,7 @@ sub template {
 
 =head1 VERSION
 
-0.054
+0.055
 
 =head1 NAME
 
