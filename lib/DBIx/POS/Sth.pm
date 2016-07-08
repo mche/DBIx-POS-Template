@@ -29,20 +29,6 @@ sub sth {
     $sth = $dbh->prepare($sql);
   }
   
-  
-  
-=pod
-
-https://www.depesz.com/2012/12/02/what-is-the-point-of-bouncing/
-
-$dbh->do('PREPARE mystat AS SELECT COUNT(*) FROM pg_class WHERE reltuples < ?');
-$sth = $dbh->prepare($s, {pg_server_prepare => 0,});
-$sth->bind_param(1, 1, SQL_INTEGER);
-$sth->{pg_prepare_name} = 'mystat';
-$sth->execute(123);
-DEALLOCATE  name 
-=cut
-  
   return $sth;
   
 }
@@ -94,4 +80,15 @@ Used for templates of $pos.
 
 L<DBIx::POS::Template>
 
+L<https://www.depesz.com/2012/12/02/what-is-the-point-of-bouncing/>
+
 =cut
+
+
+__END__
+$dbh->do('PREPARE mystat AS SELECT COUNT(*) FROM pg_class WHERE reltuples < ?');
+$sth = $dbh->prepare($s, {pg_server_prepare => 0,});
+$sth->bind_param(1, 1, SQL_INTEGER);
+$sth->{pg_prepare_name} = 'mystat';
+$sth->execute(123);
+DEALLOCATE  name 
