@@ -1,8 +1,6 @@
 package DBIx::POS::Sth;
 use strict;
 use utf8;
-#~ use Data::Dumper;
-
 
 sub new {
   my ($class, $dbh, $pos) = map shift, 0..2;
@@ -10,7 +8,6 @@ sub new {
   return bless [$dbh, $pos, \%opt], $class;
 }
 
-my %clone;
 
 sub sth {
   my ($dbh, $pos, $opt) = @{ shift() };
