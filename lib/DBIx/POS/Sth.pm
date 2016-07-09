@@ -1,21 +1,24 @@
 package DBIx::POS::Sth;
 use strict;
 use utf8;
+use Hash::Merge qw(merge);
 
 sub new {
-  my ($class, $dbh, $pos) = map shift, 0..2;
-  my %opt = @_;
-  return bless [$dbh, $pos, \%opt], $class;
+  #~ my ($class, $dbh, $pos) = map shift, 0..2;
+  #~ my %opt = @_;
+  #~ return bless [$dbh, $pos, \%opt], $class;
+  my $class = shift;
+  return bless \@_, $class;
 }
 
 
 sub sth {
-  my ($dbh, $pos, $opt) = @{ shift() };
+  my ($dbh, $pos, $template) = @{ shift() };
   my $name = shift;
   my %arg = @_;
   die "No such name[$name] in POS-SQL dict! @{[ join ':', keys %$pos  ]}" unless $pos->{$name};
 
-  my $sql = $pos->{$name}->template(%$opt, %arg).sprintf("\n--DBIx::POS::Sth name: [%s]", $pos->{$name}->name);
+  my $sql = $pos->{$name}->template(%$template ? %arg ? %{merge($template, \%arg)} : %$template : %arg).sprintf("\n--DBIx::POS::Sth name: [%s]", $pos->{$name}->name);
   my $param = $pos->{$name}->param;
   
   my $sth;
