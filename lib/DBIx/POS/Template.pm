@@ -47,19 +47,6 @@ sub new {
     bless $new, $class;
 }
 
-# Taken directly from Class::Singleton
-#~ sub instance000 {
-    #~ my $class = shift;
-    #~ $scope = 'instance';
-    #~ # get a reference to the _instance variable in the $class package 
-    #~ no strict 'refs';
-    #~ my $instance = \${ "$class\::_instance" };
-
-    #~ defined $$instance
-        #~ ? $$instance
-        #~ : ($$instance = $class->_instance(@_));
-#~ }
-
 # class singleton
 my $instance;  
 sub instance {
