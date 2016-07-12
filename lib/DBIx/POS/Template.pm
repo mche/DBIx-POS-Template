@@ -36,7 +36,6 @@ sub new {
     # change file
     $file = _file( $file,);
     
-    
     return $CACHE{$file} # если был синглетон, то заново распарсить файл
         if exists $CACHE{$file} && ref $CACHE{$file};
     
