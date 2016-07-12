@@ -5,7 +5,7 @@ use base qw{Pod::Parser};
 use Hash::Merge qw(merge);
 use Encode;
 
-our $VERSION = '0.063';
+our $VERSION = '0.064';
 
 # Hold data for our pending statement
 my $info = {};
@@ -68,11 +68,13 @@ sub instance {
     $instance;
 }
 
-sub _process {# pos file
+sub _process {# pos file/module
     my ($class, $file,) = @_;
     return unless $file;
     $file .='.pm'
         if $file =~ s/::/\//g;
+    $file = $INC{$file}
+        unless -e $file;
     die "No such file [$file]"
         unless -e $file;
     #~ warn "Processing file [$file]";
@@ -294,7 +296,7 @@ sub template {
 
 =head1 VERSION
 
-0.063
+0.064
 
 =head1 NAME
 
