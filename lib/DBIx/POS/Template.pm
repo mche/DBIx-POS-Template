@@ -86,6 +86,8 @@ sub _process {# pos file
     return unless $file;
     $file .='.pm'
         if $file =~ s/::/\//g;
+    die "No such file [$file]"
+        unless -e $file;
     #~ warn "Processing file [$file]";
     $enc = undef;
     $class->SUPER::new->parse_from_file($file);
