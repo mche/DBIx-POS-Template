@@ -5,7 +5,7 @@ use base qw{Pod::Parser};
 use Hash::Merge qw(merge);
 use Encode;
 
-our $VERSION = '0.064';
+our $VERSION = '0.065';
 
 # Hold data for our pending statement
 my $info = {};
@@ -28,23 +28,30 @@ my %template = (); # instance scope: Text::Template->new(..., template=>\%templa
 my $template = {}; # new scope: Text::Template->new(..., template=>$template, )
 my $scope; # 'new' | 'instance'
 
+our %CACHE = ();
+
 # separate object
 sub new {
     my ($class, $file, %arg) = @_;
+    # change file
+    $file = _file( $file,);
+    
+    
+    return $CACHE{$file} # если был синглетон, то заново распарсить файл
+        if exists $CACHE{$file} && ref $CACHE{$file};
+    
     $scope = 'new';
-    #~ my %back = %sql;
     
     $tt = $arg{TT} || $arg{tt} || {};
     $template = $arg{template} || {};
-    #~ %sql = ();
+    
     
     $class->_process( $file,);
+    
     my $new = { %sql };
     %sql = ();
-    #~ %sql = %back;
-    
 
-    bless $new, $class;
+    $CACHE{$file} = bless $new, $class;
 }
 
 # class singleton
@@ -52,6 +59,18 @@ my $instance;
 sub instance {
     my ($class, $file, %arg) = @_;
     $instance ||= bless({}, ref($class) || $class);
+    
+    $file = _file( $file,);# change file
+    
+    if (exists $CACHE{$file}) {# кэш для синглетона просто число, если этот файл был new, то в кэше объект
+        return $instance
+            unless ref $CACHE{$file};
+        
+        @$instance{ keys %{$CACHE{$file}} } = values %{$CACHE{$file}};
+        
+        return $instance;
+    }
+    
     $scope = 'instance';
     # merge prev tt opts
     my $tt = $arg{TT} || $arg{tt};
@@ -63,6 +82,9 @@ sub instance {
         if $arg{template} && %{$arg{template}};
     
     $class->_process( $file,);
+    
+    $CACHE{$file}++;
+    
     @$instance{ keys %sql } = values %sql;
     %sql = ();
     $instance;
@@ -70,16 +92,22 @@ sub instance {
 
 sub _process {# pos file/module
     my ($class, $file,) = @_;
-    return unless $file;
+    #~ return unless $file;
+    #~ warn "Processing file [$file]";
+    $enc = undef;
+    $class->SUPER::new->parse_from_file($file);
+}
+
+sub _file {
+    my ($file,) = @_;
+    #~ return unless $file;
     $file .='.pm'
         if $file =~ s/::/\//g;
     $file = $INC{$file}
         unless -e $file;
     die "No such file [$file]"
         unless -e $file;
-    #~ warn "Processing file [$file]";
-    $enc = undef;
-    $class->SUPER::new->parse_from_file($file);
+    return $file;
 }
 
 sub template {
@@ -296,7 +324,7 @@ sub template {
 
 =head1 VERSION
 
-0.064
+0.065
 
 =head1 NAME
 
