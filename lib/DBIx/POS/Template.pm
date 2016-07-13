@@ -5,7 +5,7 @@ use base qw{Pod::Parser};
 use Hash::Merge qw(merge);
 use Encode;
 
-our $VERSION = '0.065';
+our $VERSION = '0.067';
 
 # Hold data for our pending statement
 my $info = {};
@@ -54,14 +54,15 @@ sub new {
 }
 
 # class singleton
-my $instance;  
+my $instance;
+sub singleton { shift->instance(@_) }
 sub instance {
     my ($class, $file, %arg) = @_;
     $instance ||= bless({}, ref($class) || $class);
     
     $file = _file( $file,);# change file
     
-    if (exists $CACHE{$file}) {# кэш для синглетона просто число, если этот файл был new, то в кэше объект
+    if (exists $CACHE{$file}) {# кэш для синглетона просто число, если этот файл был new, то в кэше объект и его записи перенести в синглетон
         return $instance
             unless ref $CACHE{$file};
         
@@ -233,12 +234,8 @@ sub new {
     my %arg = @_;
     $self->{_TT} = $arg{TT} || $arg{tt} ;
     $self->{_template_default} = $arg{template};
-    #~ $self->{_enc} = $arg{enc};
+
     bless ($self, $class);
-    #~ if (my $enc = $self->{_enc}) {
-        #~ my @enc = qw(name desc param short sql);
-        #~ @$self{ @enc } = map Encode::decode($enc, $self->{$_}), @enc;
-    #~ }
     $self->_eval_param();
     return $self;
 }
@@ -303,11 +300,13 @@ sub template {
         %{$self->{_TT}},
     );
     #~ $self->{_template}->fill_in(HASH=>{%{$self->{_template_default}}, %arg},);#BROKEN_ARG=>\'error!', BROKEN => sub { die @_;},
-    return $self->{_template}->fill_in(HASH=>$self->{_template_default})
-        unless %arg;
-    return $self->{_template}->fill_in(HASH=>\%arg)
-        unless %{$self->{_template_default}};
-    $self->{_template}->fill_in(HASH=>merge(\%arg, $self->{_template_default}));
+    #~ return $self->{_template}->fill_in(HASH=>$self->{_template_default})
+        #~ unless %arg;
+    #~ return $self->{_template}->fill_in(HASH=>\%arg)
+        #~ unless %{$self->{_template_default}};
+    $self->{_template}->fill_in(HASH=>#merge(\%arg, $self->{_template_default}));
+        %arg ? %{$self->{_template_default}} ? merge(\%arg, $self->{_template_default}) : \%arg : $self->{_template_default}
+    );
 }
 
 
@@ -323,7 +322,7 @@ sub template {
 
 =head1 VERSION
 
-0.065
+0.067
 
 =head1 NAME
 
